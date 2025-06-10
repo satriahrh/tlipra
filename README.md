@@ -1,0 +1,42 @@
+# Good Night
+
+## Explicit requirements (in my language)
+
+1. Build API using Ruby on Rails
+2. API to record (clock in/out) when about to go bed and wake up.
+3. API to return all clocked in times, ordered by created time.
+4. API to follow and unfollow users.
+5. API to see all sleep records of all users the are following.
+   - From previous week only
+   - Sorted by the duration of each sleep record across all followed users.
+   - Shall be a flat list of records
+6. Implement the model, database migrations, schema, and JSON API.
+7. Write tests for the APIs.
+8. Handle a growing user base, managing high data volumes and concurrent requests, efficiently
+9. Document the strategy.
+
+## Given Assumption
+
+1. User only have id and name
+2. No need to implement user registration API
+3. Use any ruby gems
+
+## Our Assumptions
+
+1. Simplified model, we will directly use aggregated table with simple schema
+2. API Design simplification, to limit the number of API
+3. API Security simplification, passing user id in Authorization shall be suffice. We can try to implement proper security later.
+4. Use MySql, because we are more familiar with among rails's db pairing.
+5. Testing strategy that we are aware of in Rails. We are targetting for must and secondary items.
+   - [must] unit test in model or small package
+   - [must] unit test in business logic, mainly in service layer
+   - [secondary] integration test in the controller
+   - [optional] end to end test
+
+## Planned timeline
+
+- Day 1: Understand and planning
+- Day 2: Models, migrations, clock in/out API and follow/unfollow API
+- Day 3-5: Sleep records API, business logic, expect adjustment on model due to indexing
+- Day 6: Completing testing, clean code, performance check up
+- Day 7: Documentation, final polish
