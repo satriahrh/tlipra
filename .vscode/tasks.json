@@ -1,0 +1,66 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "RSpec: Run all tests",
+            "type": "shell",
+            "command": "bundle",
+            "args": [
+                "exec",
+                "rspec"
+            ],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "RSpec: Run current file",
+            "type": "shell",
+            "command": "bundle",
+            "args": [
+                "exec",
+                "rspec",
+                "${file}"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "RSpec: Run with coverage",
+            "type": "shell",
+            "command": "bundle",
+            "args": [
+                "exec",
+                "rspec",
+                "--format",
+                "documentation",
+                "--format",
+                "html",
+                "--out",
+                "coverage/index.html"
+            ],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        }
+    ]
+} 

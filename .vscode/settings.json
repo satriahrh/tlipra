@@ -1,0 +1,17 @@
+{
+    "rubyTestExplorer.rspecCommand": "bundle exec rspec",
+    "rubyTestExplorer.logpanel": true,
+    "rubyTestExplorer.additionalArgs": [
+        "--format",
+        "documentation"
+    ],
+    "ruby.useBundler": true,
+    "ruby.useLanguageServer": true,
+    "ruby.lint": {
+        "rubocop": {
+            "useBundler": true
+        }
+    },
+    "ruby.format": "rubocop",
+    "ruby.intellisense": "rubyLocate"
+}
