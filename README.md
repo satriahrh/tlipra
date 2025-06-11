@@ -40,3 +40,22 @@
 - Day 3-5: Sleep records API, business logic, expect adjustment on model due to indexing
 - Day 6: Completing testing, clean code, performance check up
 - Day 7: Documentation, final polish
+
+## API Spec
+
+- **Clock In/Out**: Single endpoint that handles both operations (POST `/api/sleep-records`)
+  - If no active record exists → clock in
+  - If active record exists → clock out
+- **Follow/Unfollow**: Simple toggle endpoint (POST `/api/follows`)
+- **Sleep Record Feeds**: GET `/api/feeds?page=1&per_page=20`
+
+## Development Log
+
+- June 10, 2025
+   - Project reading and recap on Ruby language and RoR
+   - Started project setup and planning with 7-day development timeline
+
+- June 11, 2025
+   - Defined requirements for sleep tracking API with follow/unfollow functionality
+   - Implemented User model with test coverage
+   - Initiated implementation of Followership, might add test later
