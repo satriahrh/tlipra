@@ -58,4 +58,7 @@
 - June 11, 2025
    - Defined requirements for sleep tracking API with follow/unfollow functionality
    - Implemented User model with test coverage
-   - Initiated implementation of Followership, might add test later
+   - Initiated implementation of Followership, might add test later, uncommited yet
+
+- June 12, 2025
+  - Continue working on followership model, complete test coverage
