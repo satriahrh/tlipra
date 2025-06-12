@@ -9,9 +9,6 @@ class Followership < ApplicationRecord
   validates :follower_id, uniqueness: { scope: :followed_id }
   validate :cannot_follow_self
 
-  scope :active, -> { where(status: :active) }
-  scope :unfollowed, -> { where(status: :unfollowed) }
-
   def unfollowed?
     status == "unfollowed"
   end
