@@ -21,12 +21,26 @@ class User < ApplicationRecord
     end
 
     def following?(other_user)
-        followerships.find_by(followed: other_user, status: 'active').present?
+        followerships.find_by(followed: other_user, status: "active").present?
     end
 
-    def sleep_clock_in
+    def sleep_clock_in!
+        # Check if user already has an active sleep record
+        if sleep_records.where(clock_out_at: nil).exists?
+            raise "User already has an active sleep record"
+        end
+
+        sleep_records.create!(clock_in_at: Time.current)
     end
 
-    def sleep_clock_out
+    def sleep_clock_out!
+        # Find the active sleep record
+        active_record = sleep_records.where(clock_out_at: nil).last
+        if active_record.nil?
+            raise "No active sleep record found"
+        end
+
+        active_record.update!(clock_out_at: Time.current)
+        active_record
     end
 end

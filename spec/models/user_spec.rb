@@ -59,4 +59,30 @@ RSpec.describe User, type: :model do
       expect(user.following?(other_user)).to be_falsey
     end
   end
+
+  describe '#sleep_clock_in!' do
+    let(:user) { create(:user) }
+
+    it 'creates a sleep record' do
+      expect { user.sleep_clock_in! }.to change(SleepRecord, :count).by(1)
+    end
+
+    it 'raises an error if user already has an active sleep record' do
+      user.sleep_clock_in!
+      expect { user.sleep_clock_in! }.to raise_error(RuntimeError, "User already has an active sleep record")
+    end
+  end
+
+  describe '#sleep_clock_out!' do
+    let(:user) { create(:user) }
+
+    it 'raises an error if user has no active sleep record' do
+      expect { user.sleep_clock_out! }.to raise_error(RuntimeError, "No active sleep record found")
+    end
+
+    it 'updates the sleep record' do
+      user.sleep_clock_in!
+      expect { user.sleep_clock_out! }.to change { user.sleep_records.last.clock_out_at }.from(nil)
+    end
+  end
 end
