@@ -62,3 +62,6 @@
 
 - June 12, 2025
   - Continue working on followership model, complete test coverage
+
+- June 13, 2025
+   - Completed initial sleep record and its rspec
