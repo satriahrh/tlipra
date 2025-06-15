@@ -44,8 +44,7 @@
 ## API Spec
 
 - **Clock In/Out**: Single endpoint that handles both operations (POST `/api/sleep-records`)
-  - If no active record exists → clock in
-  - If active record exists → clock out
+   - Pass action_type to indicate clock_in or clock_out
 - **Follow/Unfollow**: Simple toggle endpoint (POST `/api/follows`)
 - **Sleep Record Feeds**: GET `/api/feeds?page=1&per_page=20`
 
@@ -65,3 +64,8 @@
 
 - June 13, 2025
    - Completed initial sleep record and its rspec
+
+- June 15, 2025
+   - Sleep tracking API, complete
+   - Init to add swagger
+   - Provide simple code cov
