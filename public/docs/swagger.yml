@@ -47,7 +47,7 @@ info:
     url: https://opensource.org/licenses/MIT
 
 servers:
-  - url: http://localhost:3000
+  - url: http://127.0.0.1:3000
     description: Development server
   - url: https://api.goodnight.com
     description: Production server
