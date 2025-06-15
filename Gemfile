@@ -53,6 +53,9 @@ group :development, :test do
   gem "faker"
   gem "shoulda-matchers"
   gem "database_cleaner-active_record"
+
+  # Swagger documentation
+  gem "rswag-ui"
 end
 
 gem "solargraph", "~> 0.55.1", group: :development
