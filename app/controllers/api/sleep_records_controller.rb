@@ -37,9 +37,9 @@ class Api::SleepRecordsController < ApplicationController
       code: error_code
     }, status: :unprocessable_entity
   rescue StandardError => e
-    render json: { 
-      error: e.message, 
-      code: "INTERNAL_ERROR" 
+    render json: {
+      error: e.message,
+      code: "INTERNAL_ERROR"
     }, status: :internal_server_error
   end
 
@@ -47,7 +47,7 @@ class Api::SleepRecordsController < ApplicationController
 
   def validate_action
     unless %w[clock_in clock_out].include?(params[:action_type])
-      render json: { 
+      render json: {
         error: "action_type must be either 'clock_in' or 'clock_out'",
         code: "INVALID_ACTION_TYPE"
       }, status: :bad_request
