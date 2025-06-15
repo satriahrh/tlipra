@@ -5,21 +5,11 @@
             "name": "RSpec - all",
             "type": "Ruby",
             "request": "launch",
+            "useBundler": true,
             "program": "${workspaceRoot}/bin/rspec",
             "args": [
                 "-I",
                 "${workspaceRoot}"
-            ]
-        },
-        {
-            "name": "RSpec - active spec file only",
-            "type": "Ruby",
-            "request": "launch",
-            "program": "${workspaceRoot}/bin/rspec",
-            "args": [
-                "-I",
-                "${workspaceRoot}",
-                "${file}"
             ]
         },
         {
@@ -30,6 +20,21 @@
             "args": [
                 "server"
             ]
+        },
+        {
+            "type": "rdbg",
+            "name": "RSpec current line with rdbg",
+            "request": "launch",
+            "useBundler": true,
+            "script": "./bin/rspec",
+            "args": [
+                "${file}:${lineNumber}"
+            ],
+        },
+        {
+                "type": "rdbg",
+                "name": "Attach with rdbg",
+                "request": "attach"
         }
     ]
 } 
