@@ -1,0 +1,297 @@
+openapi: 3.0.3
+info:
+  title: Good Night Sleep Tracking API
+  description: |
+    API for tracking sleep patterns with follow/unfollow functionality.
+    
+    ## Features
+    - Clock in/out for sleep tracking
+    - Follow/unfollow other users
+    - View sleep records feed from followed users
+    
+    ## Authentication
+    All endpoints require user authentication via the `Authorization` header containing the user ID.
+    
+    ## Rate Limiting
+    API requests are subject to rate limiting to ensure fair usage.
+    
+    ## Response Codes
+    All API responses include a `code` field for programmatic handling:
+    
+    ### Success Codes
+    - `SUCCESS` - Operation completed successfully
+    
+    ### Error Codes
+    - `UNAUTHORIZED` - User ID is missing or invalid in Authorization header
+    - `USER_NOT_FOUND` - User with the provided ID does not exist
+    - `INVALID_ACTION_TYPE` - The action_type parameter is not one of the allowed values
+    - `BUSINESS_LOGIC_ERROR` - Generic business rule violation
+    - `ALREADY_CLOCKED_IN` - User already has an active sleep record (cannot clock in again)
+    - `NO_ACTIVE_SLEEP_RECORD` - No active sleep record found (cannot clock out)
+    - `INTERNAL_ERROR` - Unexpected server error or system failure
+    
+    ### HTTP Status Codes
+    - `200` - Success (clock out)
+    - `201` - Created (clock in)
+    - `400` - Bad Request (invalid parameters)
+    - `401` - Unauthorized (missing/invalid user ID)
+    - `404` - Not Found (user not found)
+    - `422` - Unprocessable Entity (business logic error)
+    - `500` - Internal Server Error (system error)
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@goodnight.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000
+    description: Development server
+  - url: https://api.goodnight.com
+    description: Production server
+
+paths:
+  /api/sleep-records:
+    post:
+      summary: Clock in or out for sleep tracking
+      description: |
+        Record sleep clock in or clock out events. 
+        - Use `action_type: "clock_in"` to start tracking sleep
+        - Use `action_type: "clock_out"` to end sleep tracking
+        
+        Only one active sleep record per user is allowed.
+      tags:
+        - Sleep Records
+      security:
+        - UserAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action_type
+              properties:
+                action_type:
+                  type: string
+                  enum: [clock_in, clock_out]
+                  description: The type of sleep action to perform
+                  example: "clock_in"
+      responses:
+        '201':
+          description: Successfully clocked in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SleepRecordResponse'
+              example:
+                action: "clock_in"
+                data:
+                  id: 1
+                  user_id: 123
+                  clock_in_at: "2025-01-15T22:00:00Z"
+                  clock_out_at: null
+                  duration: null
+                  created_at: "2025-01-15T22:00:00Z"
+                  updated_at: "2025-01-15T22:00:00Z"
+                message: "Successfully clocked in"
+                code: "SUCCESS"
+        '200':
+          description: Successfully clocked out
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SleepRecordResponse'
+              example:
+                action: "clock_out"
+                data:
+                  id: 1
+                  user_id: 123
+                  clock_in_at: "2025-01-15T22:00:00Z"
+                  clock_out_at: "2025-01-16T06:00:00Z"
+                  duration: 28800
+                  created_at: "2025-01-15T22:00:00Z"
+                  updated_at: "2025-01-16T06:00:00Z"
+                message: "Successfully clocked out"
+                code: "SUCCESS"
+        '400':
+          description: Bad request - Invalid action type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "action_type must be either 'clock_in' or 'clock_out'"
+                code: "INVALID_ACTION_TYPE"
+        '401':
+          description: Unauthorized - User ID required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "User ID required"
+                code: "UNAUTHORIZED"
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "User not found"
+                code: "USER_NOT_FOUND"
+        '422':
+          description: Unprocessable entity - Business logic error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                already_clocked_in:
+                  summary: User already has an active sleep record
+                  value:
+                    error: "User already has an active sleep record"
+                    code: "ALREADY_CLOCKED_IN"
+                no_active_record:
+                  summary: No active sleep record found
+                  value:
+                    error: "No active sleep record found"
+                    code: "NO_ACTIVE_SLEEP_RECORD"
+                generic_business_error:
+                  summary: Generic business logic error
+                  value:
+                    error: "Business rule violation"
+                    code: "BUSINESS_LOGIC_ERROR"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "An unexpected error occurred"
+                code: "INTERNAL_ERROR"
+
+  /up:
+    get:
+      summary: Health check endpoint
+      description: Returns 200 if the application is running properly
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Application is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  code:
+                    type: string
+                    example: "SUCCESS"
+
+components:
+  securitySchemes:
+    UserAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: User ID for authentication
+      example: "123"
+
+  schemas:
+    SleepRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the sleep record
+          example: 1
+        user_id:
+          type: integer
+          description: ID of the user who owns this sleep record
+          example: 123
+        clock_in_at:
+          type: string
+          format: date-time
+          description: Timestamp when user clocked in
+          example: "2025-01-15T22:00:00Z"
+        clock_out_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp when user clocked out (null if still active)
+          example: "2025-01-16T06:00:00Z"
+        duration:
+          type: integer
+          nullable: true
+          description: Duration of sleep in seconds (null if still active)
+          example: 28800
+        created_at:
+          type: string
+          format: date-time
+          description: Record creation timestamp
+          example: "2025-01-15T22:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Record last update timestamp
+          example: "2025-01-16T06:00:00Z"
+      required:
+        - id
+        - user_id
+        - clock_in_at
+        - created_at
+        - updated_at
+
+    SleepRecordResponse:
+      type: object
+      properties:
+        action:
+          type: string
+          enum: [clock_in, clock_out]
+          description: The action that was performed
+          example: "clock_in"
+        data:
+          $ref: '#/components/schemas/SleepRecord'
+        message:
+          type: string
+          description: Success message
+          example: "Successfully clocked in"
+        code:
+          type: string
+          description: Response code indicating the result
+          example: "SUCCESS"
+      required:
+        - action
+        - data
+        - message
+        - code
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "User ID required"
+        code:
+          type: string
+          description: Error code for programmatic handling
+          example: "UNAUTHORIZED"
+      required:
+        - error
+        - code
+
+tags:
+  - name: Sleep Records
+    description: Operations related to sleep tracking
+  - name: Health
+    description: Health check operations
