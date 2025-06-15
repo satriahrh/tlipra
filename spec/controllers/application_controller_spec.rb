@@ -64,7 +64,7 @@ RSpec.describe ApplicationController, type: :controller do
 
         get :index
 
-        expect(response).to have_http_status(:not_found)
+        expect(response).to have_http_status(:unauthorized)
         json_response = JSON.parse(response.body)
         expect(json_response["error"]).to eq("User not found")
       end
@@ -76,7 +76,7 @@ RSpec.describe ApplicationController, type: :controller do
 
         get :index
 
-        expect(response).to have_http_status(:not_found)
+        expect(response).to have_http_status(:unauthorized)
         json_response = JSON.parse(response.body)
         expect(json_response["error"]).to eq("User not found")
       end

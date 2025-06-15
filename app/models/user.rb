@@ -27,7 +27,7 @@ class User < ApplicationRecord
     def sleep_clock_in!
         # Check if user already has an active sleep record
         if sleep_records.where(clock_out_at: nil).exists?
-            raise "User already has an active sleep record"
+            raise BusinessLogicError, "User already has an active sleep record"
         end
 
         sleep_records.create!(clock_in_at: Time.current)
@@ -37,7 +37,7 @@ class User < ApplicationRecord
         # Find the active sleep record
         active_record = sleep_records.where(clock_out_at: nil).last
         if active_record.nil?
-            raise "No active sleep record found"
+            raise BusinessLogicError, "No active sleep record found"
         end
 
         active_record.update!(clock_out_at: Time.current)

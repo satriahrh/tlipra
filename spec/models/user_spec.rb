@@ -69,7 +69,7 @@ RSpec.describe User, type: :model do
 
     it 'raises an error if user already has an active sleep record' do
       user.sleep_clock_in!
-      expect { user.sleep_clock_in! }.to raise_error(RuntimeError, "User already has an active sleep record")
+      expect { user.sleep_clock_in! }.to raise_error(BusinessLogicError, "User already has an active sleep record")
     end
   end
 
@@ -77,7 +77,7 @@ RSpec.describe User, type: :model do
     let(:user) { create(:user) }
 
     it 'raises an error if user has no active sleep record' do
-      expect { user.sleep_clock_out! }.to raise_error(RuntimeError, "No active sleep record found")
+      expect { user.sleep_clock_out! }.to raise_error(BusinessLogicError, "No active sleep record found")
     end
 
     it 'updates the sleep record' do
