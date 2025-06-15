@@ -11,26 +11,22 @@ RSpec.describe User, type: :model do
     it { should validate_presence_of(:name) }
   end
 
-  describe '#follow' do
+  describe '#follow!' do
     let(:user) { create(:user) }
     let(:other_user) { create(:user) }
 
-    it 'creates a followership' do
+    it 'creates a followership when not following' do
       expect { user.follow!(other_user) }.to change(Followership, :count).by(1)
     end
 
-    it 'does not create duplicate followerships' do
-      user.follow!(other_user)
+    it 'refollows when previously unfollowed' do
+      followership = user.followerships.create!(followed: other_user, status: 'unfollowed')
       expect { user.follow!(other_user) }.not_to change(Followership, :count)
-    end
-
-    it 'updates status to active' do
-      user.follow!(other_user)
-      expect(Followership.find_by(follower: user, followed: other_user).status).to eq('active')
+      expect(followership.reload.status).to eq('active')
     end
   end
 
-  describe '#unfollow' do
+  describe '#unfollow!' do
     let(:user) { create(:user) }
     let(:other_user) { create(:user) }
 
@@ -41,21 +37,34 @@ RSpec.describe User, type: :model do
       followership = Followership.find_by(follower: user, followed: other_user)
       expect(followership.status).to eq('unfollowed')
     end
+
+    it 'raises error when not following' do
+      another_user = create(:user)
+      expect { user.unfollow!(another_user) }.to raise_error(BusinessLogicError, "Not following this user")
+    end
+
+    it 'raises error when already unfollowed' do
+      user.unfollow!(other_user)
+      expect { user.unfollow!(other_user) }.to raise_error(BusinessLogicError, "Already unfollowed this user")
+    end
   end
 
-  describe '#refollow' do
+  describe '#following?' do
     let(:user) { create(:user) }
     let(:other_user) { create(:user) }
 
-    before { user.follow!(other_user) }
-
-    it 'keeps the followership but update the status' do
-      user.unfollow!(other_user)
+    it 'returns true when actively following' do
       user.follow!(other_user)
-      expect(Followership.count).to eq(1)
       expect(user.following?(other_user)).to be_truthy
+    end
+
+    it 'returns false when not following' do
+      expect(user.following?(other_user)).to be_falsey
+    end
+
+    it 'returns false when unfollowed' do
+      user.follow!(other_user)
       user.unfollow!(other_user)
-      expect(Followership.count).to eq(1)
       expect(user.following?(other_user)).to be_falsey
     end
   end

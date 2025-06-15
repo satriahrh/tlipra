@@ -11,13 +11,21 @@ class User < ApplicationRecord
 
     def follow!(other_user)
         followership = followerships.find_or_create_by(followed: other_user)
-        followership.refollow! if followership.unfollowed?
+        if followership.unfollowed?
+            followership.refollow!
+        end
         followership
     end
 
     def unfollow!(other_user)
         followership = followerships.find_by(followed: other_user)
-        followership&.unfollow!
+        if followership.nil?
+            raise BusinessLogicError, "Not following this user"
+        end
+        if followership.unfollowed?
+            raise BusinessLogicError, "Already unfollowed this user"
+        end
+        followership.unfollow!
     end
 
     def following?(other_user)
