@@ -66,7 +66,7 @@ RSpec.describe Followership, type: :model do
     end
 
     it 'clears unfollowed_at timestamp' do
-      expect { followership.refollow! }.to change { followership.unfollowed_at}
+      expect { followership.refollow! }.to change { followership.unfollowed_at }
         .from(be_present).to(be_nil)
     end
 

@@ -12,7 +12,7 @@ RSpec.describe SleepRecord, type: :model do
 
     context 'when both clock_in_at and clock_out_at are present' do
       it 'validates clock_out_at is after clock_in_at' do
-        sleep_record = build(:sleep_record, 
+        sleep_record = build(:sleep_record,
           clock_in_at: Time.current,
           clock_out_at: 1.hour.ago
         )
@@ -84,4 +84,4 @@ RSpec.describe SleepRecord, type: :model do
       end
     end
   end
-end 
+end

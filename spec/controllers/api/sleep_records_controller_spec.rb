@@ -67,7 +67,6 @@ RSpec.describe Api::SleepRecordsController, type: :controller do
           expect(json_response['message']).to eq('Successfully clocked out')
           expect(json_response['data']['clock_out_at']).to be_present
           expect(json_response['data']['duration']).to be_present
-
         end
       end
 
