@@ -69,3 +69,7 @@
    - Sleep tracking API, complete
    - Init to add swagger
    - Provide simple code cov
+
+- June 17 - 18, 2025
+   - Refactor follow / unfollow model for implementation in controller
+   - Followership API
