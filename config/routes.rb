@@ -8,6 +8,14 @@ Rails.application.routes.draw do
   # API routes
   namespace :api do
     post "sleep-records", to: "sleep_records#create"
+
+    # Follow/unfollow routes
+    resources :users, only: [], param: :other_user_id do
+      member do
+        post "follow", to: "followerships#create", as: :follow
+        delete "unfollow", to: "followerships#destroy", as: :unfollow
+      end
+    end
   end
 
   # Defines the root path route ("/")

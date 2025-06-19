@@ -50,4 +50,8 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions.
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # Enable SQL logging for debugging
+  config.active_record.verbose_query_logs = true
+  config.active_record.query_log_tags_enabled = true
 end

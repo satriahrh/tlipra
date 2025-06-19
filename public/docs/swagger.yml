@@ -166,6 +166,11 @@ paths:
                   value:
                     error: "Business rule violation"
                     code: "BUSINESS_LOGIC_ERROR"
+                record_invalid:
+                  summary: Cannot follow yourself
+                  value:
+                    error: "Validation failed: Cannot follow yourself"
+                    code: "RECORD_INVALID"
         '500':
           description: Internal server error
           content:
@@ -175,6 +180,54 @@ paths:
               example:
                 error: "An unexpected error occurred"
                 code: "INTERNAL_ERROR"
+
+  /api/users/{user_id}/follow:
+    post:
+      summary: Follow a user
+      description: Follow a user by their ID
+      tags:
+        - Followerships
+      security:
+        - UserAuth: []
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: integer
+          example: 123
+          description: ID of the user to follow
+      responses:
+        '201':
+          description: Successfully followed user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowershipResponse'
+
+  /api/users/{user_id}/unfollow:
+    delete:
+      summary: Unfollow a user
+      description: Unfollow a user by their ID
+      tags:
+        - Followerships
+      security:
+        - UserAuth: []
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: integer
+          example: 123
+          description: ID of the user to follow
+      responses:
+        '200':
+          description: Successfully unfollowed user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FollowershipResponse'
 
   /up:
     get:
@@ -204,7 +257,6 @@ components:
       in: header
       name: Authorization
       description: User ID for authentication
-      example: "123"
 
   schemas:
     SleepRecord:
@@ -275,6 +327,66 @@ components:
         - message
         - code
 
+    Followership:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the followership
+          example: 1
+        follower_id:
+          type: integer
+          description: ID of the user who is following
+          example: 123
+        followed_id:
+          type: integer
+          description: ID of the user who is being followed
+          example: 456
+        status:
+          type: string
+          enum: [active, unfollowed]
+          description: Status of the followership
+          example: "active"
+        created_at:
+          type: string
+          format: date-time
+          description: Record creation timestamp
+          example: "2025-01-15T22:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Record last update timestamp
+          example: "2025-01-16T06:00:00Z"
+      required:
+        - id
+        - follower_id
+        - followed_id
+        - status
+        - created_at
+
+    FollowershipResponse:
+      type: object
+      properties:
+        action:
+          type: string
+          enum: [follow, unfollow]
+          description: The action that was performed
+          example: "follow"
+        data:
+          $ref: '#/components/schemas/Followership'
+        message:
+          type: string
+          description: Success message
+          example: "Successfully followed user"
+        code:
+          type: string
+          description: Response code indicating the result
+          example: "SUCCESS"
+      required:
+        - action
+        - data
+        - message
+
     ErrorResponse:
       type: object
       properties:
@@ -293,5 +405,7 @@ components:
 tags:
   - name: Sleep Records
     description: Operations related to sleep tracking
+  - name: Followerships
+    description: Operations related to follow/unfollow functionality
   - name: Health
     description: Health check operations

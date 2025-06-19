@@ -10,7 +10,7 @@ class User < ApplicationRecord
     validates :name, presence: true
 
     def follow!(other_user)
-        followership = followerships.find_or_create_by(followed: other_user)
+        followership = followerships.find_or_create_by!(followed: other_user)
         if followership.unfollowed?
             followership.refollow!
         end
