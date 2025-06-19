@@ -53,7 +53,7 @@ servers:
     description: Production server
 
 paths:
-  /api/sleep-records:
+  /api/sleep_records:
     post:
       summary: Clock in or out for sleep tracking
       description: |

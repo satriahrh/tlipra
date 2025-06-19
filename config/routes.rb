@@ -7,7 +7,7 @@ Rails.application.routes.draw do
 
   # API routes
   namespace :api do
-    post "sleep-records", to: "sleep_records#create"
+    resources :sleep_records, only: [ :create ]
 
     # Follow/unfollow routes
     resources :users, only: [], param: :other_user_id do
