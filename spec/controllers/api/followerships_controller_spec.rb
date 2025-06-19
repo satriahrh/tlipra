@@ -14,7 +14,7 @@ RSpec.describe Api::FollowershipsController, type: :controller do
     context 'when following a user for the first time' do
       it 'creates a new followership' do
         request.headers['Authorization'] = user.id.to_s
-        
+
         expect do
           post :create, params: { other_user_id: other_user.id }
         end.to change(Followership, :count).by(1)
