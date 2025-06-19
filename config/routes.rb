@@ -7,7 +7,11 @@ Rails.application.routes.draw do
 
   # API routes
   namespace :api do
-    resources :sleep_records, only: [ :create ]
+    resources :sleep_records, only: [ :create ] do
+      collection do
+        get :feeds
+      end
+    end
 
     # Follow/unfollow routes
     resources :users, only: [], param: :other_user_id do

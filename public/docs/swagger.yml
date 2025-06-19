@@ -183,6 +183,76 @@ paths:
                 error: "An unexpected error occurred"
                 code: "INTERNAL_ERROR"
 
+  /api/sleep_records/feeds:
+    get:
+      summary: Get sleep record feeds from followed users (previous week)
+      tags:
+        - Sleep Records
+      security:
+        - UserAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            example: 1
+          description: Page number for pagination
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            example: 20
+          description: Number of records per page
+      responses:
+        '200':
+          description: A sleep record feed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SleepRecord'
+                  message:
+                    type: string
+                    example: "Successfully fetched sleep records"
+                  code:
+                    type: string
+                    example: "SUCCESS"
+                  total:
+                    type: integer
+                    example: 100
+                  page:
+                    type: integer
+                    example: 1
+                  per_page:
+                    type: integer
+                    example: 20
+                required:
+                  - data
+                  - message
+                  - code
+                  - total
+                  - page
+                  - per_page
+              example:
+                data:
+                  id: 1
+                  user:
+                    id: 123
+                    name: "John Doe"
+                  clock_in_at: "2025-01-15T22:00:00Z"
+                  clock_out_at: null
+                  duration: null
+                  created_at: "2025-01-15T22:00:00Z"
+                message: "Successfully fetched sleep records"
+                code: "SUCCESS"
+                total: 100
+                page: 1
+                per_page: 20
+        '401':
+          description: Unauthorized
+
   /api/users/{user_id}/follow:
     post:
       summary: Follow a user
