@@ -91,12 +91,13 @@ paths:
                 action: "clock_in"
                 data:
                   id: 1
-                  user_id: 123
+                  user:
+                    id: 123
+                    name: "John Doe"
                   clock_in_at: "2025-01-15T22:00:00Z"
                   clock_out_at: null
                   duration: null
                   created_at: "2025-01-15T22:00:00Z"
-                  updated_at: "2025-01-15T22:00:00Z"
                 message: "Successfully clocked in"
                 code: "SUCCESS"
         '200':
@@ -109,12 +110,13 @@ paths:
                 action: "clock_out"
                 data:
                   id: 1
-                  user_id: 123
+                  user:
+                    id: 123
+                    name: "John Doe"
                   clock_in_at: "2025-01-15T22:00:00Z"
                   clock_out_at: "2025-01-16T06:00:00Z"
                   duration: 28800
                   created_at: "2025-01-15T22:00:00Z"
-                  updated_at: "2025-01-16T06:00:00Z"
                 message: "Successfully clocked out"
                 code: "SUCCESS"
         '400':
@@ -266,10 +268,8 @@ components:
           type: integer
           description: Unique identifier for the sleep record
           example: 1
-        user_id:
-          type: integer
-          description: ID of the user who owns this sleep record
-          example: 123
+        user:
+          $ref: '#/components/schemas/User'
         clock_in_at:
           type: string
           format: date-time
@@ -291,17 +291,11 @@ components:
           format: date-time
           description: Record creation timestamp
           example: "2025-01-15T22:00:00Z"
-        updated_at:
-          type: string
-          format: date-time
-          description: Record last update timestamp
-          example: "2025-01-16T06:00:00Z"
       required:
         - id
-        - user_id
+        - user
         - clock_in_at
         - created_at
-        - updated_at
 
     SleepRecordResponse:
       type: object
@@ -326,6 +320,21 @@ components:
         - data
         - message
         - code
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the user
+          example: 123
+        name:
+          type: string
+          description: Name of the user
+          example: "John Doe"
+      required:
+        - id
+        - name
 
     Followership:
       type: object

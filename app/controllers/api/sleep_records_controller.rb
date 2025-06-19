@@ -8,7 +8,7 @@ class Api::SleepRecordsController < ApplicationController
 
       render json: {
         action: "clock_in",
-        data: sleep_record_json(sleep_record),
+        data: SleepRecordSerializer.new(sleep_record).as_json,
         message: "Successfully clocked in",
         code: "SUCCESS"
       }, status: :created
@@ -17,7 +17,7 @@ class Api::SleepRecordsController < ApplicationController
 
       render json: {
         action: "clock_out",
-        data: sleep_record_json(sleep_record),
+        data: SleepRecordSerializer.new(sleep_record).as_json,
         message: "Successfully clocked out",
         code: "SUCCESS"
       }, status: :ok
@@ -52,17 +52,5 @@ class Api::SleepRecordsController < ApplicationController
         code: "INVALID_ACTION_TYPE"
       }, status: :bad_request
     end
-  end
-
-  def sleep_record_json(sleep_record)
-    {
-      id: sleep_record.id,
-      user_id: sleep_record.user_id,
-      clock_in_at: sleep_record.clock_in_at,
-      clock_out_at: sleep_record.clock_out_at,
-      duration: sleep_record.duration,
-      created_at: sleep_record.created_at,
-      updated_at: sleep_record.updated_at
-    }
   end
 end

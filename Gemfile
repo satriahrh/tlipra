@@ -59,3 +59,4 @@ group :development, :test do
 end
 
 gem "solargraph", "~> 0.55.1", group: :development
+gem "active_model_serializers"

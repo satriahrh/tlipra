@@ -25,9 +25,10 @@ RSpec.describe Api::SleepRecordsController, type: :controller do
           json_response = JSON.parse(response.body)
           expect(json_response['action']).to eq('clock_in')
           expect(json_response['message']).to eq('Successfully clocked in')
-          expect(json_response['data']['user_id']).to eq(user.id)
           expect(json_response['data']['clock_in_at']).to be_present
           expect(json_response['data']['clock_out_at']).to be_nil
+          expect(json_response['data']['user']['id']).to eq(user.id)
+          expect(json_response['data']['user']['name']).to eq(user.name)
         end
       end
 
@@ -135,12 +136,11 @@ RSpec.describe Api::SleepRecordsController, type: :controller do
 
       expect(record_json).to include(
         'id',
-        'user_id',
+        'user',
         'clock_in_at',
         'clock_out_at',
         'duration',
         'created_at',
-        'updated_at'
       )
     end
   end
