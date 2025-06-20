@@ -10,6 +10,7 @@ Rails.application.routes.draw do
     resources :sleep_records, only: [ :create ] do
       collection do
         get :feeds
+        get :clock_in_history
       end
     end
 

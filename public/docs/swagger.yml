@@ -174,14 +174,7 @@ paths:
                     error: "Validation failed: Cannot follow yourself"
                     code: "RECORD_INVALID"
         '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: "An unexpected error occurred"
-                code: "INTERNAL_ERROR"
+          $ref: '#/components/responses/InternalServerError'
 
   /api/sleep_records/feeds:
     get:
@@ -236,8 +229,8 @@ paths:
           required: true
           schema:
             type: integer
-          example: 123
-          description: ID of the user to follow
+            example: 123
+            description: ID of the user to follow
       responses:
         '201':
           description: Successfully followed user
@@ -260,8 +253,8 @@ paths:
           required: true
           schema:
             type: integer
-          example: 123
-          description: ID of the user to follow
+            example: 123
+            description: ID of the user to follow
       responses:
         '200':
           description: Successfully unfollowed user
@@ -299,9 +292,43 @@ components:
       name: Authorization
       description: User ID for authentication
 
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "User ID required"
+            code: "UNAUTHORIZED"
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Resource not found"
+            code: "NOT_FOUND"
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "An unexpected error occurred"
+            code: "INTERNAL_ERROR"
+
   schemas:
     SleepRecord:
       type: object
+      required:
+        - id
+        - user
+        - clock_in_at
+        - created_at
       properties:
         id:
           type: integer
@@ -330,14 +357,14 @@ components:
           format: date-time
           description: Record creation timestamp
           example: "2025-01-15T22:00:00Z"
-      required:
-        - id
-        - user
-        - clock_in_at
-        - created_at
 
     SleepRecordResponse:
       type: object
+      required:
+        - action
+        - data
+        - message
+        - code
       properties:
         action:
           type: string
@@ -354,14 +381,16 @@ components:
           type: string
           description: Response code indicating the result
           example: "SUCCESS"
-      required:
-        - action
-        - data
-        - message
-        - code
 
     SleepRecordFeedResponse:
       type: object
+      required:
+        - data
+        - message
+        - code
+        - total
+        - page
+        - per_page
       properties:
         data:
           type: array
@@ -382,16 +411,12 @@ components:
         per_page:
           type: integer
           example: 20
-      required:
-        - data
-        - message
-        - code
-        - total
-        - page
-        - per_page
 
     User:
       type: object
+      required:
+        - id
+        - name
       properties:
         id:
           type: integer
@@ -401,12 +426,15 @@ components:
           type: string
           description: Name of the user
           example: "John Doe"
-      required:
-        - id
-        - name
 
     Followership:
       type: object
+      required:
+        - id
+        - follower_id
+        - followed_id
+        - status
+        - created_at
       properties:
         id:
           type: integer
@@ -435,15 +463,14 @@ components:
           format: date-time
           description: Record last update timestamp
           example: "2025-01-16T06:00:00Z"
-      required:
-        - id
-        - follower_id
-        - followed_id
-        - status
-        - created_at
 
     FollowershipResponse:
       type: object
+      required:
+        - action
+        - data
+        - message
+        - code
       properties:
         action:
           type: string
@@ -460,13 +487,12 @@ components:
           type: string
           description: Response code indicating the result
           example: "SUCCESS"
-      required:
-        - action
-        - data
-        - message
 
     ErrorResponse:
       type: object
+      required:
+        - error
+        - code
       properties:
         error:
           type: string
@@ -476,9 +502,6 @@ components:
           type: string
           description: Error code for programmatic handling
           example: "UNAUTHORIZED"
-      required:
-        - error
-        - code
 
 tags:
   - name: Sleep Records

@@ -50,6 +50,25 @@ class Api::SleepRecordsController < ApplicationController
     }, status: :internal_server_error
   end
 
+  def clock_in_history
+    page = params[:page].present? ? params[:page].to_i : DEFAULT_PAGE
+    per_page = params[:per_page].present? ? params[:per_page].to_i : DEFAULT_PER_PAGE
+
+    relation = @user.sleep_records.
+      where(clock_out_at: nil).
+      order(id: :desc)
+
+    records = relation.limit(per_page).offset((page - 1) * per_page)
+
+    render json: {
+      data: records.map(&:clock_in_at),
+      code: "SUCCESS",
+      total: relation.count,
+      page: page,
+      per_page: per_page
+    }
+  end
+
   def feeds
     options = { user: @user }
     options[:page] = params[:page] if params[:page].present?

@@ -203,4 +203,45 @@ RSpec.describe Api::SleepRecordsController, type: :controller do
       )
     end
   end
+
+  describe 'GET #clock_in_history' do
+    let!(:active_records) { create_list(:sleep_record, 25, user: user) }
+
+    before do
+      request.headers['Authorization'] = user.id.to_s
+    end
+
+    it 'returns the list sorted by most recent first (by id)' do
+      get :clock_in_history
+      json = JSON.parse(response.body)
+
+      # The controller is sorting by id, so the order should be by creation
+      expected_order = active_records.sort_by(&:id).reverse.map { |r| r.clock_in_at.iso8601(3) }
+      response_data = json['data'].map { |t| Time.parse(t).iso8601(3) }
+      expect(response_data.first).to eq(expected_order.first)
+      expect(response_data.last).to eq(expected_order[response_data.length - 1])
+    end
+
+    context 'when user is not authenticated' do
+      it 'returns an unauthorized error' do
+        request.headers['Authorization'] = nil
+        get :clock_in_history, params: { per_page: 10 }
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+
+    context 'when pagination is applied' do
+      it 'returns the correct number of records' do
+        get :clock_in_history, params: { per_page: 10 }
+
+        expect(response).to have_http_status(:ok)
+        json = JSON.parse(response.body)
+        expect(json['data'].size).to eq(10)
+        expect(json['total']).to eq(25)
+        expect(json['page']).to eq(1)
+        expect(json['per_page']).to eq(10)
+      end
+    end
+  end
 end
