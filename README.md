@@ -73,3 +73,8 @@
 - June 17 - 18, 2025
    - Refactor follow / unfollow model for implementation in controller
    - Followership API
+
+- June 19, 2025
+   - Expose rspec in CI
+   - Feeds API
+   - Adding database indexing for direct improvement on Feeds API
