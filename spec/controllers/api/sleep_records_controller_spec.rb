@@ -125,6 +125,65 @@ RSpec.describe Api::SleepRecordsController, type: :controller do
     end
   end
 
+  describe 'GET #feeds' do
+    let(:service_instance) { instance_double(Users::GetSleepRecordsFeedsService) }
+    let(:service_result) do
+      {
+        records: [],
+        total: 0,
+        page: 1,
+        per_page: 20
+      }
+    end
+
+    before do
+      request.headers['Authorization'] = user.id.to_s
+      allow(Users::GetSleepRecordsFeedsService).to receive(:new).and_return(service_instance)
+      allow(service_instance).to receive(:call).and_return(service_result)
+    end
+
+    it 'initializes the service with the correct user and params' do
+      expect(Users::GetSleepRecordsFeedsService).to receive(:new).with(user: user, page: '1', per_page: '20').and_return(service_instance)
+      get :feeds, params: { page: '1', per_page: '20' }
+    end
+
+    it 'calls the service' do
+      expect(service_instance).to receive(:call)
+      get :feeds
+    end
+
+    it 'returns a successful response' do
+      get :feeds
+      expect(response).to have_http_status(:ok)
+    end
+
+    it 'renders the JSON output from the service' do
+      get :feeds
+      json = JSON.parse(response.body)
+      expect(json['total']).to eq(0)
+      expect(json['page']).to eq(1)
+      expect(json['per_page']).to eq(20)
+    end
+
+    context 'when the service raises an ArgumentError' do
+      it 'returns a bad request response' do
+        allow(service_instance).to receive(:call).and_raise(ArgumentError.new("Invalid parameters"))
+        get :feeds
+        expect(response).to have_http_status(:bad_request)
+        json = JSON.parse(response.body)
+        expect(json['error']).to eq("Invalid parameters")
+      end
+    end
+
+    context 'when user is not authenticated' do
+      it 'returns an unauthorized error' do
+        request.headers['Authorization'] = nil
+        get :feeds
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
+
   describe 'sleep record JSON structure' do
     it 'includes all required fields' do
       request.headers['Authorization'] = user.id.to_s

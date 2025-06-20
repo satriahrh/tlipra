@@ -1,9 +1,12 @@
 class Api::SleepRecordsController < ApplicationController
   before_action :validate_action, only: [ :create ]
-  before_action :validate_feeds_params, only: [ :feeds ]
 
   DEFAULT_PAGE = 1
   DEFAULT_PER_PAGE = 20
+
+  rescue_from ArgumentError do |e|
+    render json: { error: e.message, code: "INVALID_PARAMS" }, status: :bad_request
+  end
 
   def create
     case params[:action_type]
@@ -48,45 +51,22 @@ class Api::SleepRecordsController < ApplicationController
   end
 
   def feeds
-    page = params[:page].present? ? params[:page].to_i : DEFAULT_PAGE
-    per_page = params[:per_page].present? ? params[:per_page].to_i : DEFAULT_PER_PAGE
+    options = { user: @user }
+    options[:page] = params[:page] if params[:page].present?
+    options[:per_page] = params[:per_page] if params[:per_page].present?
 
-    following_user_ids = @user.following.pluck(:id)
-    last_week = 1.week.ago.beginning_of_week..1.week.ago.end_of_week
-
-    sleep_records = SleepRecord
-      .includes(:user)
-      .where(user_id: following_user_ids, clock_in_at: last_week)
-      .where.not(duration: nil)
-      .order(duration: :desc)
-      .limit(per_page)
-      .offset((page - 1) * per_page)
+    service_result = Users::GetSleepRecordsFeedsService.new(**options).call
 
     render json: {
-      data: sleep_records.map { |record| SleepRecordSerializer.new(record).as_json },
+      data: ActiveModelSerializers::SerializableResource.new(service_result[:records], each_serializer: SleepRecordSerializer),
       code: "SUCCESS",
-      total: sleep_records.count,
-      page: page,
-      per_page: per_page
+      total: service_result[:total],
+      page: service_result[:page],
+      per_page: service_result[:per_page]
     }
   end
 
   private
-
-  def validate_feeds_params
-    if params[:page].present? && (params[:page].to_s !~ /\A\d+\z/ || params[:page].to_i <= 0)
-      render json: {
-        error: "page must be a positive integer",
-        code: "INVALID_PARAMS"
-      }, status: :bad_request and return
-    end
-    if params[:per_page].present? && (params[:per_page].to_s !~ /\A\d+\z/ || params[:per_page].to_i <= 0)
-      render json: {
-        error: "per_page must be a positive integer",
-        code: "INVALID_PARAMS"
-      }, status: :bad_request and return
-    end
-  end
 
   def validate_action
     unless %w[clock_in clock_out].include?(params[:action_type])
