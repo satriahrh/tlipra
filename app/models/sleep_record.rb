@@ -5,6 +5,7 @@ class SleepRecord < ApplicationRecord
   validate :clock_out_after_clock_in, if: :both_times_present?
 
   before_update :prevent_duration_update, unless: :clock_out_at_changed?
+  before_update :prevent_clock_in_at_change, if: :clock_in_at_changed?
 
   def clock_out_at=(value)
     super(value)
@@ -36,5 +37,10 @@ class SleepRecord < ApplicationRecord
         errors.add(:clock_out_at, "must be after clock in time")
       end
     end
+  end
+
+  def prevent_clock_in_at_change
+    errors.add(:clock_in_at, "cannot be changed after creation")
+    throw(:abort)
   end
 end
