@@ -10,7 +10,6 @@ RSpec.describe SleepRecordSerializer, type: :serializer do
 
     it 'includes all required attributes' do
       expect(serialized_data).to include(
-        :id,
         :clock_in_at,
         :clock_out_at,
         :duration,

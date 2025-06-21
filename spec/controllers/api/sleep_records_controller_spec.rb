@@ -277,7 +277,6 @@ RSpec.describe Api::SleepRecordsController, type: :controller do
       record_json = json_response['data']
 
       expect(record_json).to include(
-        'id',
         'user',
         'clock_in_at',
         'clock_out_at',

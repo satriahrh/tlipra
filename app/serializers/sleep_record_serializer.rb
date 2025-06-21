@@ -1,5 +1,5 @@
 class SleepRecordSerializer < ActiveModel::Serializer
-  attributes :id, :clock_in_at, :clock_out_at, :duration, :created_at
+  attributes :clock_in_at, :clock_out_at, :duration, :created_at
   belongs_to :user, if: -> { object.user.present? }
 
   def duration
