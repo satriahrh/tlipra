@@ -16,7 +16,7 @@ module Users
 
       sleep_records_relation = SleepRecord
         .includes(:user)
-        .where(user_id: followed_user_ids, clock_in_at: last_week)
+        .where(clock_in_at: last_week, user_id: followed_user_ids)
         .where.not(duration: nil)
 
       paginated_records = sleep_records_relation

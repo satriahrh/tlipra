@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_20_170000) do
+ActiveRecord::Schema[8.0].define(version: 2025_06_21_160100) do
   create_table "followerships", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "follower_id", null: false
     t.bigint "followed_id", null: false
@@ -23,13 +23,15 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_20_170000) do
     t.index ["follower_id"], name: "index_followerships_on_follower_id"
   end
 
-  create_table "sleep_records", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+  create_table "sleep_records", primary_key: ["id", "clock_in_at"], charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", options: "ENGINE=InnoDB\n/*!50100 PARTITION BY RANGE (to_days(`clock_in_at`))\n(PARTITION p_20250616_to_20250622 VALUES LESS THAN (739790) ENGINE = InnoDB,\n PARTITION p_20250623_to_20250629 VALUES LESS THAN (739797) ENGINE = InnoDB,\n PARTITION p_20250630_to_20250706 VALUES LESS THAN (739804) ENGINE = InnoDB,\n PARTITION p_20250707_to_20250713 VALUES LESS THAN (739811) ENGINE = InnoDB,\n PARTITION p_20250714_to_20250720 VALUES LESS THAN (739818) ENGINE = InnoDB,\n PARTITION p_max VALUES LESS THAN MAXVALUE ENGINE = InnoDB) */", force: :cascade do |t|
+    t.bigint "id", null: false, auto_increment: true
     t.bigint "user_id", null: false
-    t.datetime "clock_in_at"
+    t.datetime "clock_in_at", null: false
     t.datetime "clock_out_at"
     t.integer "duration"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["clock_in_at", "user_id", "duration"], name: "index_sleep_records_on_clock_user_duration"
     t.index ["user_id", "clock_in_at", "duration"], name: "index_sleep_records_on_user_id_and_clock_in_at_and_duration"
   end
 
