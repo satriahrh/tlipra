@@ -1,20 +1,4 @@
-    end
-  end
-
-  describe '#duration' do
-    context 'when duration is already set' do
-      let(:sleep_record) { create(:sleep_record, :completed, user: user, duration: 3600) }
-
-        expect(serializer.id).to be_a(Integer)
-      end
-    end
-  end
-
-  describe '#duration' do
-    context 'when duration is already set' do
-      let(:sleep_record) { create(:sleep_record, :completed, user: user, duration: 3600) }
-
-      it 'returns the existing duration' do
+require 'rails_helper'
 
 RSpec.describe SleepRecordSerializer, type: :serializer do
   let(:user) { create(:user) }
