@@ -143,7 +143,7 @@ RSpec.describe Api::SleepRecordsController, type: :controller do
     end
 
     it 'initializes the service with the correct user and params' do
-      expect(Users::GetSleepRecordsFeedsService).to receive(:new).with(user: user, page: '1', per_page: '20').and_return(service_instance)
+      expect(Users::GetSleepRecordsFeedsService).to receive(:new).with(user, page: 1, per_page: 20).and_return(service_instance)
       get :feeds, params: { page: '1', per_page: '20' }
     end
 
@@ -165,6 +165,88 @@ RSpec.describe Api::SleepRecordsController, type: :controller do
       expect(json['per_page']).to eq(20)
     end
 
+    context 'when page parameter is invalid' do
+      it 'returns bad request for non-numeric page' do
+        get :feeds, params: { page: 'abc' }
+        expect(response).to have_http_status(:bad_request)
+        json = JSON.parse(response.body)
+        expect(json['error']).to eq('page must be a positive integer')
+        expect(json['code']).to eq('INVALID_PARAMS')
+      end
+
+      it 'returns bad request for zero page' do
+        get :feeds, params: { page: '0' }
+        expect(response).to have_http_status(:bad_request)
+        json = JSON.parse(response.body)
+        expect(json['error']).to eq('page must be a positive integer')
+        expect(json['code']).to eq('INVALID_PARAMS')
+      end
+
+      it 'returns bad request for negative page' do
+        get :feeds, params: { page: '-1' }
+        expect(response).to have_http_status(:bad_request)
+        json = JSON.parse(response.body)
+        expect(json['error']).to eq('page must be a positive integer')
+        expect(json['code']).to eq('INVALID_PARAMS')
+      end
+
+      it 'returns bad request for decimal page' do
+        get :feeds, params: { page: '1.5' }
+        expect(response).to have_http_status(:bad_request)
+        json = JSON.parse(response.body)
+        expect(json['error']).to eq('page must be a positive integer')
+        expect(json['code']).to eq('INVALID_PARAMS')
+      end
+    end
+
+    context 'when per_page parameter is invalid' do
+      it 'returns bad request for non-numeric per_page' do
+        get :feeds, params: { per_page: 'abc' }
+        expect(response).to have_http_status(:bad_request)
+        json = JSON.parse(response.body)
+        expect(json['error']).to eq('per_page must be a positive integer')
+        expect(json['code']).to eq('INVALID_PARAMS')
+      end
+
+      it 'returns bad request for zero per_page' do
+        get :feeds, params: { per_page: '0' }
+        expect(response).to have_http_status(:bad_request)
+        json = JSON.parse(response.body)
+        expect(json['error']).to eq('per_page must be a positive integer')
+        expect(json['code']).to eq('INVALID_PARAMS')
+      end
+
+      it 'returns bad request for negative per_page' do
+        get :feeds, params: { per_page: '-1' }
+        expect(response).to have_http_status(:bad_request)
+        json = JSON.parse(response.body)
+        expect(json['error']).to eq('per_page must be a positive integer')
+        expect(json['code']).to eq('INVALID_PARAMS')
+      end
+
+      it 'returns bad request for decimal per_page' do
+        get :feeds, params: { per_page: '10.5' }
+        expect(response).to have_http_status(:bad_request)
+        json = JSON.parse(response.body)
+        expect(json['error']).to eq('per_page must be a positive integer')
+        expect(json['code']).to eq('INVALID_PARAMS')
+      end
+    end
+
+    context 'when parameters are valid' do
+      it 'accepts valid positive integers' do
+        expect(Users::GetSleepRecordsFeedsService).to receive(:new).with(user, page: 5, per_page: 15).and_return(service_instance)
+        get :feeds, params: { page: '5', per_page: '15' }
+        expect(response).to have_http_status(:ok)
+      end
+
+      it 'uses default values when parameters are not provided' do
+        expect(Users::GetSleepRecordsFeedsService).to receive(:new).with(user, page: Users::GetSleepRecordsFeedsService::DEFAULT_PAGE, per_page: Users::GetSleepRecordsFeedsService::DEFAULT_PER_PAGE).and_return(service_instance)
+        get :feeds
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
     context 'when the service raises an ArgumentError' do
       it 'returns a bad request response' do
         allow(service_instance).to receive(:call).and_raise(ArgumentError.new("Invalid parameters"))
@@ -172,6 +254,7 @@ RSpec.describe Api::SleepRecordsController, type: :controller do
         expect(response).to have_http_status(:bad_request)
         json = JSON.parse(response.body)
         expect(json['error']).to eq("Invalid parameters")
+        expect(json['code']).to eq('INVALID_PARAMS')
       end
     end
 

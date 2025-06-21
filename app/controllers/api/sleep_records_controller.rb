@@ -70,11 +70,10 @@ class Api::SleepRecordsController < ApplicationController
   end
 
   def feeds
-    options = { user: @user }
-    options[:page] = params[:page] if params[:page].present?
-    options[:per_page] = params[:per_page] if params[:per_page].present?
+    page = validate_and_convert_to_int(params[:page], Users::GetSleepRecordsFeedsService::DEFAULT_PAGE, "page")
+    per_page = validate_and_convert_to_int(params[:per_page], Users::GetSleepRecordsFeedsService::DEFAULT_PER_PAGE, "per_page")
 
-    service_result = Users::GetSleepRecordsFeedsService.new(**options).call
+    service_result = Users::GetSleepRecordsFeedsService.new(@user, page: page, per_page: per_page).call
 
     render json: {
       data: ActiveModelSerializers::SerializableResource.new(service_result[:records], each_serializer: SleepRecordSerializer),
@@ -86,6 +85,17 @@ class Api::SleepRecordsController < ApplicationController
   end
 
   private
+
+  def validate_and_convert_to_int(value, default, param_name)
+    return default if value.blank?
+
+    # Check if the string represents a valid positive integer
+    unless value.to_s.match?(/^[1-9]\d*$/)
+      raise ArgumentError, "#{param_name} must be a positive integer"
+    end
+
+    value.to_i
+  end
 
   def validate_action
     unless %w[clock_in clock_out].include?(params[:action_type])
