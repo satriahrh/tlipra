@@ -78,3 +78,9 @@
    - Expose rspec in CI
    - Feeds API
    - Adding database indexing for direct improvement on Feeds API
+
+- June 20 to 22, 2025
+   - Database partitioning
+   - API Clock in history
+   - Swaggerize
+   - Documentation for submission
