@@ -148,6 +148,33 @@ This approach allows us to consider the pattern on a case-by-case basis. If the 
 -   **More Files**: Can increase the number of files and directories in the `app` folder.
 -   **Developer Discipline**: The team must be deliberate about when to introduce a Service Object versus when to use simpler patterns.
 
+### ADR-003: User as the Root Domain Entity
+
+- **Status**: Active
+- **Date**: 2025-06-23 (recap)
+
+#### Context
+
+Every feature in the application revolves around a `User`. Users track their own sleep, follow other users, and view the activities of those they follow. A clear and central `User` model is therefore essential. For the scope of this project, complex features like authentication, profiles, and permissions are not required. The primary need is a simple, identifiable entity to serve as the anchor for all other data.
+
+#### Decision
+
+We decided to design the `User` model as the **root entity** of the domain, with the following characteristics:
+
+1.  **Center of Associations**: All other major models have a direct `belongs_to` or `has_many` relationship with the `User` model. `SleepRecord`s belong to a user, and `Followership`s link two users together. This creates a clear and predictable data hierarchy.
+
+2.  **Home for Core Actions**: User-centric business logic is implemented as instance methods directly on the `User` model. Actions that represent a core capability of a user, such as `follow!(other_user)` or `sleep_clock_in!`, are placed here. This decision was made because these are single-step operations that fundamentally belong to the user's behavior. This is in direct contrast to multi-step orchestration logic (like the feed generation), which is handled by Service Objects.
+
+#### Consequences
+
+**Positive:**
+-   **High Cohesion**: Logic directly related to a user's capabilities is located with the user's data, making the system intuitive to understand and navigate.
+-   **Reduced Boilerplate**: Avoids creating unnecessary Service Objects for simple, single-actor operations, which would add complexity without significant benefit.
+-   **Clear Domain Model**: The central role of the `User` makes the overall application architecture easy to grasp.
+
+**Negative:**
+-   **Risk of "Fat Model"**: If many more complex, user-centric actions were added, the `User` model could become bloated. The team must remain disciplined about identifying when a piece of logic is complex enough to warrant being extracted into a Service Object.
+
 ---
 
 ## Project Journal
