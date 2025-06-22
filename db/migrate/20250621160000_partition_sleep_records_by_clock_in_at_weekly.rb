@@ -3,7 +3,7 @@ class PartitionSleepRecordsByClockInAtWeekly < ActiveRecord::Migration[8.0]
     # MySQL requires the partitioning key to be in the primary key.
     # We must drop the old primary key and create a new composite one.
     # Note: This will also drop the auto_increment property, which we'll add back.
-    execute "ALTER TABLE sleep_records DROP PRIMARY KEY, ADD PRIMARY KEY (id, created_at);"
+    execute "ALTER TABLE sleep_records DROP PRIMARY KEY, ADD PRIMARY KEY (id, clock_in_at);"
     execute "ALTER TABLE sleep_records MODIFY id BIGINT NOT NULL AUTO_INCREMENT;"
 
     # Use a temporary, isolated model to safely query the table within the migration
@@ -44,9 +44,9 @@ class PartitionSleepRecordsByClockInAtWeekly < ActiveRecord::Migration[8.0]
   def build_weekly_partitions(start_date, end_date)
     partitions = []
 
-    # Create partitions from the earliest record up to 4 weeks in the future
+    # Create partitions from the earliest record up to end date
     current_date = start_date.beginning_of_week
-    end_of_partitions = (end_date + 4.weeks).end_of_week
+    end_of_partitions = end_date.end_of_week
 
     while current_date <= end_of_partitions
       partition_end_date = current_date.end_of_week + 1.day

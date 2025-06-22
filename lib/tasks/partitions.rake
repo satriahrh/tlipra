@@ -1,14 +1,21 @@
 namespace :partitions do
-  desc "Maintain weekly partitions for sleep_records table on MySQL (clock_in_at based RANGE partitioning)"
+  desc "Maintain weekly partitions for sleep_records table on MySQL (clock_in_at based RANGE partitioning) - run weekly on Sunday"
   task maintain_sleep_records_partitions: :environment do
-    # We want to ensure partitions exist for the next 4 weeks
-    (0..4).each do |week_offset|
-      target_date = Date.today + week_offset.weeks
-      start_of_week = target_date.beginning_of_week
+    # We want to ensure partitions exist
+    if self.class::SleepRecord.unscoped.any?
+      # minimum/maximum return Time objects, so convert to Date
+      min_date = self.class::SleepRecord.unscoped.minimum(:clock_in_at).to_date
+    else
+      # If there's no data, we'll just set up for the current week.
+      min_date = Date.today
+    end
 
-      # Generate partition name
-      week_start = start_of_week.strftime("%Y-%m-%d")
-      week_end = start_of_week.end_of_week.strftime("%Y-%m-%d")
+    current_date = min_date.beginning_of_week
+    end_of_partitions = Date.today.end_of_week + 1.week
+    while current_date <= end_of_partitions
+      partition_end_date = current_date.end_of_week + 1.day
+      week_start = current_date.strftime("%Y%m%d")
+      week_end = (partition_end_date - 1.day).strftime("%Y%m%d")
       partition_name = "p_#{week_start}_to_#{week_end}"
 
       # Check if the partition already exists in the information schema
@@ -19,10 +26,9 @@ namespace :partitions do
         puts "Creating partition #{partition_name} for week #{week_start} to #{week_end}..."
 
         # In MySQL RANGE partitioning, we add a new partition by splitting the p_max partition
-        partition_end_date = start_of_week.end_of_week + 1.day
         reorganize_query = <<-SQL
           ALTER TABLE sleep_records REORGANIZE PARTITION p_max INTO (
-            PARTITION #{partition_name} VALUES LESS THAN (TO_DAYS('#{partition_end_date.to_s(:db)}')),
+            PARTITION #{partition_name} VALUES LESS THAN (TO_DAYS('#{partition_end_date}')),
             PARTITION p_max VALUES LESS THAN MAXVALUE
           );
         SQL
@@ -32,6 +38,8 @@ namespace :partitions do
       else
         puts "Partition #{partition_name} already exists"
       end
+
+      current_date += 1.week
     end
 
     puts "Weekly partition maintenance completed!"
@@ -62,35 +70,5 @@ namespace :partitions do
 
       puts "#{partition_name.ljust(30)} | #{description.ljust(25)} | #{table_rows} rows"
     end
-  end
-
-  desc "Add a specific weekly partition for a given date"
-  task :add_partition_for_date, [ :date ] => :environment do |task, args|
-    target_date = args[:date] ? Date.parse(args[:date]) : Date.today
-    start_of_week = target_date.beginning_of_week
-
-    week_start = start_of_week.strftime("%Y%m%d")
-    week_end = start_of_week.end_of_week.strftime("%Y%m%d")
-    partition_name = "p_#{week_start}_to_#{week_end}"
-
-    puts "Adding partition: #{partition_name} for week #{week_start} to #{week_end}"
-    add_weekly_partition(partition_name, start_of_week)
-  end
-
-  private
-
-  def add_weekly_partition(partition_name, start_date)
-    partition_end_date = start_date.end_of_week + 1.day
-    reorganize_query = <<-SQL
-      ALTER TABLE sleep_records REORGANIZE PARTITION p_max INTO (
-        PARTITION #{partition_name} VALUES LESS THAN (TO_DAYS('#{partition_end_date}')),
-        PARTITION p_max VALUES LESS THAN MAXVALUE
-      );
-    SQL
-
-    ActiveRecord::Base.connection.execute(reorganize_query)
-    puts "  ✓ Partition #{partition_name} created successfully"
-  rescue => e
-    puts "  ✗ Failed to create partition #{partition_name}: #{e.message}"
   end
 end
