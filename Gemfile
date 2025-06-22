@@ -55,6 +55,8 @@ group :development, :test do
   gem "database_cleaner-active_record"
 
   # Swagger documentation
+  gem "rswag-api"
+  gem "rswag-specs"
   gem "rswag-ui"
 end
 
