@@ -14,9 +14,12 @@ module Users
       followed_user_ids = @user.following.pluck(:id)
       return empty_result if followed_user_ids.empty?
 
+      target_date = DateTime.now.last_week
+      clock_in_at_range = (target_date.beginning_of_week.to_time)..(target_date.end_of_week.to_time)
+
       sleep_records_relation = SleepRecord
         .includes(:user)
-        .where(clock_in_at: last_week, user_id: followed_user_ids)
+        .where(clock_in_at: clock_in_at_range, user_id: followed_user_ids)
         .where.not(duration: nil)
 
       paginated_records = sleep_records_relation
@@ -37,10 +40,6 @@ module Users
     def validate_params!
       raise ArgumentError, "page must be a positive integer" if @page <= 0
       raise ArgumentError, "per_page must be a positive integer" if @per_page <= 0
-    end
-
-    def last_week
-      1.week.ago.beginning_of_week..1.week.ago.end_of_week
     end
 
     def empty_result

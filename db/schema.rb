@@ -23,7 +23,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_21_160100) do
     t.index ["follower_id"], name: "index_followerships_on_follower_id"
   end
 
-  create_table "sleep_records", primary_key: ["id", "clock_in_at"], charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", options: "ENGINE=InnoDB\n/*!50100 PARTITION BY RANGE (to_days(`clock_in_at`))\n(PARTITION p_20250616_to_20250622 VALUES LESS THAN (739790) ENGINE = InnoDB,\n PARTITION p_max VALUES LESS THAN MAXVALUE ENGINE = InnoDB) */", force: :cascade do |t|
+  create_table "sleep_records", primary_key: ["id", "clock_in_at"], charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", options: "ENGINE=InnoDB\n/*!50100 PARTITION BY RANGE (to_days(`clock_in_at`))\n(PARTITION p_max VALUES LESS THAN MAXVALUE ENGINE = InnoDB) */", force: :cascade do |t|
     t.bigint "id", null: false, auto_increment: true
     t.bigint "user_id", null: false
     t.datetime "clock_in_at", null: false
