@@ -55,8 +55,7 @@ class Api::SleepRecordsController < ApplicationController
     per_page = params[:per_page].present? ? params[:per_page].to_i : DEFAULT_PER_PAGE
 
     relation = @user.sleep_records.
-      where(clock_out_at: nil).
-      order(id: :desc)
+      order(created_at: :desc)
 
     records = relation.limit(per_page).offset((page - 1) * per_page)
 
