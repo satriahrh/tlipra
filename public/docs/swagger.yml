@@ -184,16 +184,18 @@ paths:
       parameters:
         - in: query
           name: page
+          description: Page number for pagination (default 1)
           schema:
             type: integer
+            minimum: 1
             example: 1
-          description: Page number for pagination
         - in: query
           name: per_page
+          description: Number of records per page (default 20)
           schema:
             type: integer
+            minimum: 1
             example: 20
-          description: Number of records per page
       responses:
         '200':
           description: A paginated feed of sleep records from followed users.
@@ -212,6 +214,77 @@ paths:
                 code: "INVALID_PARAMS"
         '401':
           description: Unauthorized
+
+  /api/sleep_records/clock_in_history:
+    get:
+      summary: Get user's clock in history
+      description: |
+        Retrieve a paginated list of clock in timestamps for the authenticated user.
+        Records are ordered by creation date (newest first).
+      tags:
+        - Sleep Records
+      security:
+        - UserAuth: []
+      parameters:
+        - in: query
+          name: page
+          description: Page number for pagination (default 1)
+          schema:
+            type: integer
+            minimum: 1
+            example: 1
+        - in: query
+          name: per_page
+          description: Number of records per page (default 20)
+          schema:
+            type: integer
+            minimum: 1
+            example: 20
+      responses:
+        '200':
+          description: Successfully retrieved clock in history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClockInHistoryResponse'
+              example:
+                data:
+                  - "2025-01-15T22:00:00Z"
+                  - "2025-01-14T21:30:00Z"
+                  - "2025-01-13T23:15:00Z"
+                code: "SUCCESS"
+                total: 3
+                page: 1
+                per_page: 20
+        '400':
+          description: Bad Request - Invalid pagination parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "page must be a positive integer"
+                code: "INVALID_PARAMS"
+        '401':
+          description: Unauthorized - User ID required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "User ID required"
+                code: "UNAUTHORIZED"
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "User not found"
+                code: "USER_NOT_FOUND"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /api/users/{user_id}/follow:
     post:
@@ -495,6 +568,38 @@ components:
           type: string
           description: Error code for programmatic handling
           example: "UNAUTHORIZED"
+
+    ClockInHistoryResponse:
+      type: object
+      required:
+        - data
+        - code
+        - total
+        - page
+        - per_page
+      properties:
+        data:
+          type: array
+          description: Array of clock in timestamps
+          items:
+            type: string
+            format: date-time
+        code:
+          type: string
+          description: Response code indicating the result
+          example: "SUCCESS"
+        total:
+          type: integer
+          description: Total number of records
+          example: 3
+        page:
+          type: integer
+          description: Current page number
+          example: 1
+        per_page:
+          type: integer
+          description: Number of records per page
+          example: 20
 
 tags:
   - name: Sleep Records
