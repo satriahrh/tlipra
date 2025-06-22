@@ -32,6 +32,86 @@ RSpec.describe SleepRecord, type: :model do
     end
   end
 
+  describe 'clock_in_at immutability' do
+    context 'when trying to update clock_in_at after creation' do
+      let(:sleep_record) { create(:sleep_record, clock_in_at: 8.hours.ago) }
+
+      it 'prevents clock_in_at from being changed' do
+        original_clock_in_at = sleep_record.clock_in_at
+
+        sleep_record.clock_in_at = 1.hour.ago
+
+        expect(sleep_record.save).to be_falsey
+        expect(sleep_record.errors[:clock_in_at]).to include('cannot be changed after creation')
+      end
+
+      it 'prevents clock_in_at from being changed via update!' do
+        expect {
+          sleep_record.update!(clock_in_at: 1.hour.ago)
+        }.to raise_error(ActiveRecord::RecordNotSaved)
+
+        expect(sleep_record.errors[:clock_in_at]).to include('cannot be changed after creation')
+      end
+
+      it 'prevents clock_in_at from being changed via update' do
+        result = sleep_record.update(clock_in_at: 1.hour.ago)
+
+        expect(result).to be_falsey
+        expect(sleep_record.errors[:clock_in_at]).to include('cannot be changed after creation')
+      end
+
+      it 'allows other attributes to be updated' do
+        sleep_record.clock_out_at = Time.current
+
+        expect(sleep_record.save).to be_truthy
+        expect(sleep_record.reload.clock_out_at).to be_present
+      end
+
+      it 'allows clock_in_at to be set during creation' do
+        new_sleep_record = build(:sleep_record, clock_in_at: 2.hours.ago)
+
+        expect(new_sleep_record.save).to be_truthy
+        expect(new_sleep_record.clock_in_at.to_i).to eq(2.hours.ago.to_i)
+      end
+
+      it 'allows clock_in_at to be set during creation with different times' do
+        new_sleep_record = build(:sleep_record, clock_in_at: 3.hours.ago)
+
+        expect(new_sleep_record.save).to be_truthy
+        expect(new_sleep_record.clock_in_at.to_i).to eq(3.hours.ago.to_i)
+      end
+    end
+
+    context 'when clock_in_at is not being changed' do
+      let(:sleep_record) { create(:sleep_record, clock_in_at: 8.hours.ago) }
+
+      it 'allows updates to other attributes' do
+        sleep_record.clock_out_at = Time.current
+
+        expect(sleep_record.save).to be_truthy
+        expect(sleep_record.reload.clock_out_at).to be_present
+      end
+
+      it 'allows updates when clock_in_at is set to the same value' do
+        original_clock_in_at = sleep_record.clock_in_at
+        sleep_record.clock_in_at = original_clock_in_at
+        sleep_record.clock_out_at = Time.current
+
+        expect(sleep_record.save).to be_truthy
+      end
+    end
+
+    context 'when clock_in_at is nil during creation' do
+      it 'allows setting clock_in_at during creation' do
+        sleep_record = build(:sleep_record, clock_in_at: nil)
+        sleep_record.clock_in_at = Time.current
+
+        expect(sleep_record.save).to be_truthy
+        expect(sleep_record.clock_in_at).to be_present
+      end
+    end
+  end
+
   describe 'duration calculation' do
     context 'when clocking out' do
       it 'calculates duration immediately when setting clock_out_at' do

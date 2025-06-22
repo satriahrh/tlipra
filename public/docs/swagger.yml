@@ -90,7 +90,6 @@ paths:
               example:
                 action: "clock_in"
                 data:
-                  id: 1
                   user:
                     id: 123
                     name: "John Doe"
@@ -109,7 +108,6 @@ paths:
               example:
                 action: "clock_out"
                 data:
-                  id: 1
                   user:
                     id: 123
                     name: "John Doe"
@@ -325,15 +323,10 @@ components:
     SleepRecord:
       type: object
       required:
-        - id
         - user
         - clock_in_at
         - created_at
       properties:
-        id:
-          type: integer
-          description: Unique identifier for the sleep record
-          example: 1
         user:
           $ref: '#/components/schemas/User'
         clock_in_at:
