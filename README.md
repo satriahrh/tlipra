@@ -51,7 +51,7 @@ This guide provides instructions for setting up and running the application in a
     ```
 
 3.  **Configure the Database**
-    The application is configured to connect to a local MySQL server. The default settings in `config/database.yml` expect a user `root` with the password `rootpw`.
+    The application is configured to connect to a local MySQL server. The default settings in `config/database.yml` expect a user `root` with no password.
 
     If your local MySQL installation uses different credentials, please update the `development` section of `config/database.yml`.
 
