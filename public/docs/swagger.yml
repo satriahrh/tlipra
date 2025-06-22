@@ -1,610 +1,356 @@
-openapi: 3.0.3
+---
+openapi: 3.0.1
 info:
   title: Good Night Sleep Tracking API
-  description: |
-    API for tracking sleep patterns with follow/unfollow functionality.
-    
-    ## Features
-    - Clock in/out for sleep tracking
-    - Follow/unfollow other users
-    - View sleep records feed from followed users
-    
-    ## Authentication
-    All endpoints require user authentication via the `Authorization` header containing the user ID.
-    
-    ## Rate Limiting
-    API requests are subject to rate limiting to ensure fair usage.
-    
-    ## Response Codes
-    All API responses include a `code` field for programmatic handling:
-    
-    ### Success Codes
-    - `SUCCESS` - Operation completed successfully
-    
-    ### Error Codes
-    - `UNAUTHORIZED` - User ID is missing or invalid in Authorization header
-    - `USER_NOT_FOUND` - User with the provided ID does not exist
-    - `INVALID_ACTION_TYPE` - The action_type parameter is not one of the allowed values
-    - `BUSINESS_LOGIC_ERROR` - Generic business rule violation
-    - `ALREADY_CLOCKED_IN` - User already has an active sleep record (cannot clock in again)
-    - `NO_ACTIVE_SLEEP_RECORD` - No active sleep record found (cannot clock out)
-    - `INTERNAL_ERROR` - Unexpected server error or system failure
-    
-    ### HTTP Status Codes
-    - `200` - Success (clock out)
-    - `201` - Created (clock in)
-    - `400` - Bad Request (invalid parameters)
-    - `401` - Unauthorized (missing/invalid user ID)
-    - `404` - Not Found (user not found)
-    - `422` - Unprocessable Entity (business logic error)
-    - `500` - Internal Server Error (system error)
-  version: 1.0.0
-  contact:
-    name: API Support
-    email: support@goodnight.com
-  license:
-    name: MIT
-    url: https://opensource.org/licenses/MIT
-
-servers:
-  - url: http://127.0.0.1:3000
-    description: Development server
-  - url: https://api.goodnight.com
-    description: Production server
-
+  version: v1
+  description: API for tracking sleep patterns with follow/unfollow functionality.
 paths:
-  /api/sleep_records:
-    post:
-      summary: Clock in or out for sleep tracking
-      description: |
-        Record sleep clock in or clock out events. 
-        - Use `action_type: "clock_in"` to start tracking sleep
-        - Use `action_type: "clock_out"` to end sleep tracking
-        
-        Only one active sleep record per user is allowed.
-      tags:
-        - Sleep Records
-      security:
-        - UserAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - action_type
-              properties:
-                action_type:
-                  type: string
-                  enum: [clock_in, clock_out]
-                  description: The type of sleep action to perform
-                  example: "clock_in"
-      responses:
-        '201':
-          description: Successfully clocked in
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SleepRecordResponse'
-              example:
-                action: "clock_in"
-                data:
-                  user:
-                    id: 123
-                    name: "John Doe"
-                  clock_in_at: "2025-01-15T22:00:00Z"
-                  clock_out_at: null
-                  duration: null
-                  created_at: "2025-01-15T22:00:00Z"
-                message: "Successfully clocked in"
-                code: "SUCCESS"
-        '200':
-          description: Successfully clocked out
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SleepRecordResponse'
-              example:
-                action: "clock_out"
-                data:
-                  user:
-                    id: 123
-                    name: "John Doe"
-                  clock_in_at: "2025-01-15T22:00:00Z"
-                  clock_out_at: "2025-01-16T06:00:00Z"
-                  duration: 28800
-                  created_at: "2025-01-15T22:00:00Z"
-                message: "Successfully clocked out"
-                code: "SUCCESS"
-        '400':
-          description: Bad request - Invalid action type
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: "action_type must be either 'clock_in' or 'clock_out'"
-                code: "INVALID_ACTION_TYPE"
-        '401':
-          description: Unauthorized - User ID required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: "User ID required"
-                code: "UNAUTHORIZED"
-        '404':
-          description: User not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: "User not found"
-                code: "USER_NOT_FOUND"
-        '422':
-          description: Unprocessable entity - Business logic error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              examples:
-                already_clocked_in:
-                  summary: User already has an active sleep record
-                  value:
-                    error: "User already has an active sleep record"
-                    code: "ALREADY_CLOCKED_IN"
-                no_active_record:
-                  summary: No active sleep record found
-                  value:
-                    error: "No active sleep record found"
-                    code: "NO_ACTIVE_SLEEP_RECORD"
-                generic_business_error:
-                  summary: Generic business logic error
-                  value:
-                    error: "Business rule violation"
-                    code: "BUSINESS_LOGIC_ERROR"
-                record_invalid:
-                  summary: Cannot follow yourself
-                  value:
-                    error: "Validation failed: Cannot follow yourself"
-                    code: "RECORD_INVALID"
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /api/sleep_records/feeds:
-    get:
-      summary: Get sleep record feeds from followed users (previous week)
-      tags:
-        - Sleep Records
-      security:
-        - UserAuth: []
-      parameters:
-        - in: query
-          name: page
-          description: Page number for pagination (default 1)
-          schema:
-            type: integer
-            minimum: 1
-            example: 1
-        - in: query
-          name: per_page
-          description: Number of records per page (default 20)
-          schema:
-            type: integer
-            minimum: 1
-            example: 20
-      responses:
-        '200':
-          description: A paginated feed of sleep records from followed users.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SleepRecordFeedResponse'
-        '400':
-          description: Bad Request - Invalid pagination parameters
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: "page must be a positive integer"
-                code: "INVALID_PARAMS"
-        '401':
-          description: Unauthorized
-
-  /api/sleep_records/clock_in_history:
-    get:
-      summary: Get user's clock in history
-      description: |
-        Retrieve a paginated list of clock in timestamps for the authenticated user.
-        Records are ordered by creation date (newest first).
-      tags:
-        - Sleep Records
-      security:
-        - UserAuth: []
-      parameters:
-        - in: query
-          name: page
-          description: Page number for pagination (default 1)
-          schema:
-            type: integer
-            minimum: 1
-            example: 1
-        - in: query
-          name: per_page
-          description: Number of records per page (default 20)
-          schema:
-            type: integer
-            minimum: 1
-            example: 20
-      responses:
-        '200':
-          description: Successfully retrieved clock in history
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ClockInHistoryResponse'
-              example:
-                data:
-                  - "2025-01-15T22:00:00Z"
-                  - "2025-01-14T21:30:00Z"
-                  - "2025-01-13T23:15:00Z"
-                code: "SUCCESS"
-                total: 3
-                page: 1
-                per_page: 20
-        '400':
-          description: Bad Request - Invalid pagination parameters
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: "page must be a positive integer"
-                code: "INVALID_PARAMS"
-        '401':
-          description: Unauthorized - User ID required
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: "User ID required"
-                code: "UNAUTHORIZED"
-        '404':
-          description: User not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-              example:
-                error: "User not found"
-                code: "USER_NOT_FOUND"
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /api/users/{user_id}/follow:
+  "/api/users/{other_user_id}/follow":
     post:
       summary: Follow a user
-      description: Follow a user by their ID
       tags:
-        - Followerships
+      - Followerships
+      description: Follow another user.
       security:
-        - UserAuth: []
+      - UserAuth: []
       parameters:
-        - in: path
-          name: user_id
-          required: true
-          schema:
-            type: integer
-            example: 123
-            description: ID of the user to follow
+      - name: other_user_id
+        in: path
+        required: true
+        schema:
+          type: integer
       responses:
         '201':
           description: Successfully followed user
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FollowershipResponse'
-
-  /api/users/{user_id}/unfollow:
+                "$ref": "#/components/schemas/FollowershipResponse"
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '422':
+          description: Cannot follow self
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/users/{other_user_id}/unfollow":
     delete:
       summary: Unfollow a user
-      description: Unfollow a user by their ID
       tags:
-        - Followerships
+      - Followerships
+      description: Unfollow another user.
       security:
-        - UserAuth: []
+      - UserAuth: []
       parameters:
-        - in: path
-          name: user_id
-          required: true
-          schema:
-            type: integer
-            example: 123
-            description: ID of the user to follow
+      - name: other_user_id
+        in: path
+        required: true
+        schema:
+          type: integer
       responses:
         '200':
           description: Successfully unfollowed user
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FollowershipResponse'
-
-  /up:
-    get:
-      summary: Health check endpoint
-      description: Returns 200 if the application is running properly
-      tags:
-        - Health
-      responses:
-        '200':
-          description: Application is healthy
+                "$ref": "#/components/schemas/FollowershipResponse"
+        '404':
+          description: User not found
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "ok"
-                  code:
-                    type: string
-                    example: "SUCCESS"
-
+                "$ref": "#/components/schemas/ErrorResponse"
+        '422':
+          description: Not following user
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/sleep_records":
+    post:
+      summary: Clock in or out
+      tags:
+      - Sleep Records
+      description: Clock in or out for sleep tracking.
+      security:
+      - UserAuth: []
+      parameters: []
+      responses:
+        '201':
+          description: Successfully clocked in
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/SleepRecordResponse"
+        '200':
+          description: Successfully clocked out
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/SleepRecordResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '422':
+          description: No active sleep record
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action_type:
+                  type: string
+                  enum:
+                  - clock_in
+                  - clock_out
+              required:
+              - action_type
+  "/api/sleep_records/feeds":
+    get:
+      summary: Get sleep record feeds
+      tags:
+      - Sleep Records
+      description: Get sleep record feeds from followed users (previous week).
+      security:
+      - UserAuth: []
+      parameters:
+      - name: page
+        in: query
+        required: false
+        description: Page number for pagination (default 1)
+        schema:
+          type: integer
+      - name: per_page
+        in: query
+        required: false
+        description: Number of records per page (default 20)
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: successful
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/SleepRecordFeedResponse"
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/sleep_records/clock_in_history":
+    get:
+      summary: Get clock in history
+      tags:
+      - Sleep Records
+      description: |-
+        Retrieve a paginated list of clock in timestamps for the authenticated user.
+        Records are ordered by creation date (newest first).
+      security:
+      - UserAuth: []
+      parameters:
+      - name: page
+        in: query
+        required: false
+        description: Page number for pagination (default 1)
+        schema:
+          type: integer
+      - name: per_page
+        in: query
+        required: false
+        description: Number of records per page (default 20)
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: successful
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ClockInHistoryResponse"
+        '401':
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+servers:
+- url: http://{defaultHost}
+  variables:
+    defaultHost:
+      default: 127.0.0.1:3000
 components:
   securitySchemes:
     UserAuth:
       type: apiKey
       in: header
       name: Authorization
-      description: User ID for authentication
-
-  responses:
-    Unauthorized:
-      description: Unauthorized
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-          example:
-            error: "User ID required"
-            code: "UNAUTHORIZED"
-    NotFound:
-      description: Not Found
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-          example:
-            error: "Resource not found"
-            code: "NOT_FOUND"
-    InternalServerError:
-      description: Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-          example:
-            error: "An unexpected error occurred"
-            code: "INTERNAL_ERROR"
-
   schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: An error message
+        code:
+          type: string
+          example: ERROR_CODE
+      required:
+      - error
+      - code
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: John Doe
+      required:
+      - id
+      - name
     SleepRecord:
       type: object
-      required:
-        - user
-        - clock_in_at
-        - created_at
       properties:
         user:
-          $ref: '#/components/schemas/User'
+          "$ref": "#/components/schemas/User"
         clock_in_at:
           type: string
           format: date-time
-          description: Timestamp when user clocked in
-          example: "2025-01-15T22:00:00Z"
+          example: '2025-01-15T22:00:00Z'
         clock_out_at:
           type: string
           format: date-time
           nullable: true
-          description: Timestamp when user clocked out (null if still active)
-          example: "2025-01-16T06:00:00Z"
+          example: '2025-01-16T06:00:00Z'
         duration:
           type: integer
           nullable: true
-          description: Duration of sleep in seconds (null if still active)
           example: 28800
         created_at:
           type: string
           format: date-time
-          description: Record creation timestamp
-          example: "2025-01-15T22:00:00Z"
-
+          example: '2025-01-15T22:00:00Z'
+      required:
+      - user
+      - clock_in_at
+      - created_at
     SleepRecordResponse:
       type: object
-      required:
-        - action
-        - data
-        - message
-        - code
       properties:
         action:
           type: string
-          enum: [clock_in, clock_out]
-          description: The action that was performed
-          example: "clock_in"
+          enum:
+          - clock_in
+          - clock_out
         data:
-          $ref: '#/components/schemas/SleepRecord'
+          "$ref": "#/components/schemas/SleepRecord"
         message:
           type: string
-          description: Success message
-          example: "Successfully clocked in"
         code:
           type: string
-          description: Response code indicating the result
-          example: "SUCCESS"
-
+          example: SUCCESS
+      required:
+      - action
+      - data
+      - message
+      - code
     SleepRecordFeedResponse:
       type: object
-      required:
-        - data
-        - message
-        - code
-        - total
-        - page
-        - per_page
       properties:
         data:
           type: array
           items:
-            $ref: '#/components/schemas/SleepRecord'
-        message:
-          type: string
-          example: "Successfully fetched sleep records"
-        code:
-          type: string
-          example: "SUCCESS"
+            "$ref": "#/components/schemas/SleepRecord"
         total:
           type: integer
-          example: 1
         page:
           type: integer
-          example: 1
         per_page:
           type: integer
-          example: 20
-
-    User:
-      type: object
       required:
-        - id
-        - name
-      properties:
-        id:
-          type: integer
-          description: Unique identifier for the user
-          example: 123
-        name:
-          type: string
-          description: Name of the user
-          example: "John Doe"
-
-    Followership:
-      type: object
-      required:
-        - id
-        - follower_id
-        - followed_id
-        - status
-        - created_at
-      properties:
-        id:
-          type: integer
-          description: Unique identifier for the followership
-          example: 1
-        follower_id:
-          type: integer
-          description: ID of the user who is following
-          example: 123
-        followed_id:
-          type: integer
-          description: ID of the user who is being followed
-          example: 456
-        status:
-          type: string
-          enum: [active, unfollowed]
-          description: Status of the followership
-          example: "active"
-        created_at:
-          type: string
-          format: date-time
-          description: Record creation timestamp
-          example: "2025-01-15T22:00:00Z"
-        updated_at:
-          type: string
-          format: date-time
-          description: Record last update timestamp
-          example: "2025-01-16T06:00:00Z"
-
-    FollowershipResponse:
-      type: object
-      required:
-        - action
-        - data
-        - message
-        - code
-      properties:
-        action:
-          type: string
-          enum: [follow, unfollow]
-          description: The action that was performed
-          example: "follow"
-        data:
-          $ref: '#/components/schemas/Followership'
-        message:
-          type: string
-          description: Success message
-          example: "Successfully followed user"
-        code:
-          type: string
-          description: Response code indicating the result
-          example: "SUCCESS"
-
-    ErrorResponse:
-      type: object
-      required:
-        - error
-        - code
-      properties:
-        error:
-          type: string
-          description: Error message
-          example: "User ID required"
-        code:
-          type: string
-          description: Error code for programmatic handling
-          example: "UNAUTHORIZED"
-
+      - data
+      - total
+      - page
+      - per_page
     ClockInHistoryResponse:
       type: object
-      required:
-        - data
-        - code
-        - total
-        - page
-        - per_page
       properties:
         data:
           type: array
-          description: Array of clock in timestamps
           items:
             type: string
             format: date-time
-        code:
-          type: string
-          description: Response code indicating the result
-          example: "SUCCESS"
         total:
           type: integer
-          description: Total number of records
-          example: 3
         page:
           type: integer
-          description: Current page number
-          example: 1
         per_page:
           type: integer
-          description: Number of records per page
-          example: 20
-
-tags:
-  - name: Sleep Records
-    description: Operations related to sleep tracking
-  - name: Followerships
-    description: Operations related to follow/unfollow functionality
-  - name: Health
-    description: Health check operations
+      required:
+      - data
+      - total
+      - page
+      - per_page
+    Followership:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        follower_id:
+          type: integer
+          example: 123
+        followed_id:
+          type: integer
+          example: 456
+        status:
+          type: string
+          enum:
+          - active
+          - unfollowed
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+      - id
+      - follower_id
+      - followed_id
+      - status
+      - created_at
+      - updated_at
+    FollowershipResponse:
+      type: object
+      properties:
+        action:
+          type: string
+          enum:
+          - follow
+          - unfollow
+        message:
+          type: string
+        code:
+          type: string
+          example: SUCCESS
+      required:
+      - action
+      - message
+      - code

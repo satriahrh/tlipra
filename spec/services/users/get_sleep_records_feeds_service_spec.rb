@@ -14,16 +14,16 @@ RSpec.describe Users::GetSleepRecordsFeedsService do
   describe '#call' do
     context 'with sleep records from the previous week' do
       let!(:record1) do
-        create(:sleep_record, user: followed_user, clock_in_at: 1.week.ago.beginning_of_week + 1.hour, clock_out_at: 1.week.ago.beginning_of_week + 9.hours) # 8h duration
+        create(:sleep_record, user: followed_user, clock_in_at: DateTime.now - 1.week + 1.hour, clock_out_at: DateTime.now - 1.week + 9.hours) # 8h duration
       end
       let!(:record2) do
-        create(:sleep_record, user: followed_user, clock_in_at: 1.week.ago.beginning_of_week + 2.hours, clock_out_at: 1.week.ago.beginning_of_week + 8.hours) # 6h duration
+        create(:sleep_record, user: followed_user, clock_in_at: DateTime.now - 1.week + 2.hours, clock_out_at: DateTime.now - 1.week + 8.hours) # 6h duration
       end
       let!(:record_old) do
-        create(:sleep_record, user: followed_user, clock_in_at: 2.weeks.ago, clock_out_at: 2.weeks.ago + 8.hours)
+        create(:sleep_record, user: followed_user, clock_in_at: DateTime.now - 2.weeks, clock_out_at: DateTime.now - 2.weeks + 8.hours)
       end
       let!(:record_unfollowed) do
-        create(:sleep_record, user: other_user, clock_in_at: 1.week.ago.beginning_of_week, clock_out_at: 1.week.ago.beginning_of_week + 8.hours)
+        create(:sleep_record, user: other_user, clock_in_at: DateTime.now - 1.week, clock_out_at: DateTime.now - 1.week + 8.hours)
       end
 
       let(:params) { {} }
@@ -43,8 +43,8 @@ RSpec.describe Users::GetSleepRecordsFeedsService do
 
     context 'with pagination' do
       let(:params) { { page: 2, per_page: 1 } }
-      let!(:record1) { create(:sleep_record, user: followed_user, clock_in_at: 1.week.ago.end_of_week - 10.hours, clock_out_at: 1.week.ago.end_of_week - 2.hour) } # 8h
-      let!(:record2) { create(:sleep_record, user: followed_user, clock_in_at: 1.week.ago.end_of_week - 12.hours, clock_out_at: 1.week.ago.end_of_week - 6.hour) } # 6h
+      let!(:record1) { create(:sleep_record, user: followed_user, clock_in_at: DateTime.now - 1.week, clock_out_at: DateTime.now - 1.week + 8.hours) } # 8h
+      let!(:record2) { create(:sleep_record, user: followed_user, clock_in_at: DateTime.now - 1.week, clock_out_at: DateTime.now - 1.week + 6.hours) } # 6h
 
       it 'returns the correct paginated records' do
         expect(service_call[:records]).to eq([ record2 ])
