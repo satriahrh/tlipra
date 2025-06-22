@@ -7,8 +7,10 @@ Rails.application.routes.draw do
 
   # API routes
   namespace :api do
-    resources :sleep_records, only: [ :create ] do
+    resources :sleep_records, only: [] do
       collection do
+        post :clock_in
+        post :clock_out
         get :feeds
         get :clock_in_history
       end
