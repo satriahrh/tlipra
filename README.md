@@ -107,6 +107,47 @@ The implementation consists of two parts:
 -   **Increased Complexity**: The database schema and application logic are now more complex. Developers need to be aware of the partitioning scheme. The `PRIMARY KEY` of the `sleep_records` table was changed to `(id, clock_in_at)`, which is a notable change from Rails conventions. [Subject for further TEST]
 -   **Maintenance Overhead**: A recurring task must be set up and monitored to ensure new partitions are created ahead of time. If this task fails, new records might all fall into unexpected partition, worst case the data will be scattered all over partitions.
 
+### ADR-002: Service Objects for Complex Business Logic
+
+- **Status**: Active
+- **Date**: 2025-06-23 (recap)
+
+#### Context
+
+In many applications, business logic that involves multiple steps or models can be difficult to place. If placed in a controller, the controller becomes "fat" and hard to test. If placed in a single model, the model can take on responsibilities beyond its core purpose, violating the Single Responsibility Principle.
+
+This project requires a clear pattern for handling such complex logic, while not adding unnecessary layers for simple operations.
+
+#### Decision
+
+We decided to adopt the **Service Object** pattern for complex business logic that orchestrates multiple resources or steps. This pattern is applied selectively.
+
+**1. The Complex Case: `Users::GetSleepRecordsFeedsService`**
+The primary example is the user's friend-feed. This is not a simple query; it's a business process that must:
+-   Complex query that requires special attention, even creating a partition to keep up with scalling data.
+-   Calculate a specific time window (the previous week).
+
+The implementation of Service Object on `Users::GetSleepRecordsFeedsService` is to demostrate, to keep the `SleepRecordsController` clean from non controller concern. The controller's job is simply to call the service (or something simple) and render its result.
+
+**2. The Simple Case: `FollowershipsController` & `SleepRecordsController#clock_in_history`**
+For straightforward CRUD operations, a Service Object would be overkill.
+-   **Creating a Followership**: The `FollowershipsController` directly uses ActiveRecord methods (`@user.follow!`). The logic is a single step and fits well as a method on the `User` model.
+-   **Clock-in History**: The `clock_in_history` action is a simple paginated query on the user's `sleep_records`. Simple and low concern sleep records query relation to current user.
+
+This approach allows us to consider the pattern on a case-by-case basis. If the "clock-in history" feature were to evolve—for example, would become a strong candidate for being refactored into its own Service Object.
+
+#### Consequences
+
+**Positive:**
+-   **Clear Separation of Concerns**: Controllers handle HTTP, models handle data, and services handle complex business processes.
+-   **Enhanced Testability**: Complex logic is isolated in Plain Old Ruby Objects (POROs), making them easy to test in isolation, without needing to simulate a full web request.
+-   **Avoids "Fat" Models/Controllers**: Prevents controllers and models from becoming bloated with logic that isn't their core responsibility.
+-   **Pragmatic Application**: The pattern is only used where needed, avoiding unnecessary abstraction for simple cases.
+
+**Negative:**
+-   **More Files**: Can increase the number of files and directories in the `app` folder.
+-   **Developer Discipline**: The team must be deliberate about when to introduce a Service Object versus when to use simpler patterns.
+
 ---
 
 ## Project Journal
