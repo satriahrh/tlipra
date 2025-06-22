@@ -10,13 +10,13 @@ RSpec.describe 'Sleep Records API', type: :request do
       description 'Clock in or out for sleep tracking.'
       consumes 'application/json'
       produces 'application/json'
-      security [UserAuth: []]
+      security [ UserAuth: [] ]
       parameter name: :params, in: :body, schema: {
         type: :object,
         properties: {
           action_type: { type: :string, enum: %w[clock_in clock_out] }
         },
-        required: ['action_type']
+        required: [ 'action_type' ]
       }
 
       response(201, 'Successfully clocked in') do
@@ -59,7 +59,7 @@ RSpec.describe 'Sleep Records API', type: :request do
       tags 'Sleep Records'
       description 'Get sleep record feeds from followed users (previous week).'
       produces 'application/json'
-      security [UserAuth: []]
+      security [ UserAuth: [] ]
       parameter name: :page, in: :query, type: :integer, required: false, description: 'Page number for pagination (default 1)'
       parameter name: :per_page, in: :query, type: :integer, required: false, description: 'Number of records per page (default 20)'
 
@@ -81,7 +81,7 @@ RSpec.describe 'Sleep Records API', type: :request do
       tags 'Sleep Records'
       description "Retrieve a paginated list of clock in timestamps for the authenticated user.\nRecords are ordered by creation date (newest first)."
       produces 'application/json'
-      security [UserAuth: []]
+      security [ UserAuth: [] ]
       parameter name: :page, in: :query, type: :integer, required: false, description: 'Page number for pagination (default 1)'
       parameter name: :per_page, in: :query, type: :integer, required: false, description: 'Number of records per page (default 20)'
 
@@ -97,4 +97,4 @@ RSpec.describe 'Sleep Records API', type: :request do
       end
     end
   end
-end 
+end

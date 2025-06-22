@@ -10,7 +10,7 @@ RSpec.describe 'Followerships API', type: :request do
       tags 'Followerships'
       description 'Follow another user.'
       produces 'application/json'
-      security [UserAuth: []]
+      security [ UserAuth: [] ]
       parameter name: :other_user_id, in: :path, type: :integer, required: true
 
       response(201, 'Successfully followed user') do
@@ -38,7 +38,7 @@ RSpec.describe 'Followerships API', type: :request do
       tags 'Followerships'
       description 'Unfollow another user.'
       produces 'application/json'
-      security [UserAuth: []]
+      security [ UserAuth: [] ]
       parameter name: :other_user_id, in: :path, type: :integer, required: true
 
       response(200, 'Successfully unfollowed user') do
@@ -61,4 +61,4 @@ RSpec.describe 'Followerships API', type: :request do
       end
     end
   end
-end 
+end
