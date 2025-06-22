@@ -9,118 +9,135 @@ RSpec.describe Api::SleepRecordsController, type: :controller do
     end
   end
 
-  describe 'POST #create' do
-    context 'when action_type is clock_in' do
-      context 'when user has no active sleep record' do
-        it 'clocks in the user' do
-          request.headers['Authorization'] = user.id.to_s
-
-          expect do
-            post :create, params: { action_type: 'clock_in' }
-          end.to change(SleepRecord, :count).by(1)
-
-          expect(response).to have_http_status(:created)
-
-          sleep_record = SleepRecord.last
-          json_response = JSON.parse(response.body)
-          expect(json_response['action']).to eq('clock_in')
-          expect(json_response['message']).to eq('Successfully clocked in')
-          expect(json_response['data']['clock_in_at']).to be_present
-          expect(json_response['data']['clock_out_at']).to be_nil
-          expect(json_response['data']['user']['id']).to eq(user.id)
-          expect(json_response['data']['user']['name']).to eq(user.name)
-        end
-      end
-
-      context 'when user has an active sleep record' do
-        let!(:active_record) { create(:sleep_record, :active, user: user) }
-
-        it 'returns error' do
-          request.headers['Authorization'] = user.id.to_s
-
-          expect do
-            post :create, params: { action_type: 'clock_in' }
-          end.not_to change(SleepRecord, :count)
-
-          expect(response).to have_http_status(:unprocessable_entity)
-
-          json_response = JSON.parse(response.body)
-          expect(json_response['error']).to eq('User already has an active sleep record')
-        end
-      end
-    end
-
-    context 'when action_type is clock_out' do
-      context 'when user has an active sleep record' do
-        let!(:active_record) { create(:sleep_record, :active, user: user) }
-
-        it 'clocks out the user' do
-          request.headers['Authorization'] = user.id.to_s
-
-          expect do
-            post :create, params: { action_type: 'clock_out' }
-          end.not_to change(SleepRecord, :count)
-
-          expect(response).to have_http_status(:ok)
-
-          json_response = JSON.parse(response.body)
-          expect(json_response['action']).to eq('clock_out')
-          expect(json_response['message']).to eq('Successfully clocked out')
-          expect(json_response['data']['clock_out_at']).to be_present
-          expect(json_response['data']['duration']).to be_present
-        end
-      end
-
-      context 'when user has no active sleep record' do
-        it 'returns error' do
-          request.headers['Authorization'] = user.id.to_s
-
-          expect do
-            post :create, params: { action_type: 'clock_out' }
-          end.not_to change(SleepRecord, :count)
-
-          expect(response).to have_http_status(:unprocessable_entity)
-
-          json_response = JSON.parse(response.body)
-          expect(json_response['error']).to eq('No active sleep record found')
-        end
-      end
-    end
-
-    context 'when action_type is invalid' do
-      it 'returns bad request error' do
+  describe 'POST #clock_in' do
+    context 'when user has no active sleep record' do
+      it 'clocks in the user' do
         request.headers['Authorization'] = user.id.to_s
 
-        post :create, params: { action_type: 'invalid_action' }
+        expect do
+          post :clock_in
+        end.to change(SleepRecord, :count).by(1)
 
-        expect(response).to have_http_status(:bad_request)
+        expect(response).to have_http_status(:created)
 
+        sleep_record = SleepRecord.last
         json_response = JSON.parse(response.body)
-        expect(json_response['error']).to eq('action_type must be either \'clock_in\' or \'clock_out\'')
+        expect(json_response['action']).to eq('clock_in')
+        expect(json_response['message']).to eq('Successfully clocked in')
+        expect(json_response['data']['clock_in_at']).to be_present
+        expect(json_response['data']['clock_out_at']).to be_nil
+        expect(json_response['data']['user']['id']).to eq(user.id)
+        expect(json_response['data']['user']['name']).to eq(user.name)
       end
     end
 
-    context 'when action_type is missing' do
-      it 'returns bad request error' do
+    context 'when user has an active sleep record' do
+      let!(:active_record) { create(:sleep_record, :active, user: user) }
+
+      it 'returns error' do
         request.headers['Authorization'] = user.id.to_s
 
-        post :create
+        expect do
+          post :clock_in
+        end.not_to change(SleepRecord, :count)
 
-        expect(response).to have_http_status(:bad_request)
+        expect(response).to have_http_status(:unprocessable_entity)
 
         json_response = JSON.parse(response.body)
-        expect(json_response['error']).to eq('action_type must be either \'clock_in\' or \'clock_out\'')
+        expect(json_response['error']).to eq('User already has an active sleep record')
       end
     end
 
     context 'when user ID is not provided' do
       it 'returns unauthorized error' do
-        post :create, params: { action_type: 'clock_in' }
+        post :clock_in
 
         expect(response).to have_http_status(:unauthorized)
 
         json_response = JSON.parse(response.body)
         expect(json_response['error']).to include('User ID required')
+      end
+    end
+
+    context 'when an unexpected error occurs' do
+      before do
+        allow(User).to receive(:find_by).with(id: user.id.to_s).and_return(user)
+        allow(user).to receive(:sleep_clock_in!).and_raise(StandardError, 'A testing error')
+        request.headers['Authorization'] = user.id.to_s
+      end
+
+      it 'returns internal server error' do
+        post :clock_in
+
+        expect(response).to have_http_status(:internal_server_error)
+        json_response = JSON.parse(response.body)
+        expect(json_response['error']).to eq('A testing error')
+        expect(json_response['code']).to eq('INTERNAL_ERROR')
+      end
+    end
+  end
+
+  describe 'POST #clock_out' do
+    context 'when user has an active sleep record' do
+      let!(:active_record) { create(:sleep_record, :active, user: user) }
+
+      it 'clocks out the user' do
+        request.headers['Authorization'] = user.id.to_s
+
+        expect do
+          post :clock_out
+        end.not_to change(SleepRecord, :count)
+
+        expect(response).to have_http_status(:ok)
+
+        json_response = JSON.parse(response.body)
+        expect(json_response['action']).to eq('clock_out')
+        expect(json_response['message']).to eq('Successfully clocked out')
+        expect(json_response['data']['clock_out_at']).to be_present
+        expect(json_response['data']['duration']).to be_present
+      end
+    end
+
+    context 'when user has no active sleep record' do
+      it 'returns error' do
+        request.headers['Authorization'] = user.id.to_s
+
+        expect do
+          post :clock_out
+        end.not_to change(SleepRecord, :count)
+
+        expect(response).to have_http_status(:unprocessable_entity)
+
+        json_response = JSON.parse(response.body)
+        expect(json_response['error']).to eq('No active sleep record found')
+      end
+    end
+
+    context 'when user ID is not provided' do
+      it 'returns unauthorized error' do
+        post :clock_out
+
+        expect(response).to have_http_status(:unauthorized)
+
+        json_response = JSON.parse(response.body)
+        expect(json_response['error']).to include('User ID required')
+      end
+    end
+
+    context 'when an unexpected error occurs' do
+      before do
+        allow(User).to receive(:find_by).with(id: user.id.to_s).and_return(user)
+        allow(user).to receive(:sleep_clock_out!).and_raise(StandardError, 'A testing error')
+        request.headers['Authorization'] = user.id.to_s
+      end
+
+      it 'returns internal server error' do
+        post :clock_out
+
+        expect(response).to have_http_status(:internal_server_error)
+        json_response = JSON.parse(response.body)
+        expect(json_response['error']).to eq('A testing error')
+        expect(json_response['code']).to eq('INTERNAL_ERROR')
       end
     end
   end
@@ -271,7 +288,7 @@ RSpec.describe Api::SleepRecordsController, type: :controller do
     it 'includes all required fields' do
       request.headers['Authorization'] = user.id.to_s
 
-      post :create, params: { action_type: 'clock_in' }
+      post :clock_in
 
       json_response = JSON.parse(response.body)
       record_json = json_response['data']
