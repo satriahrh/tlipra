@@ -4,29 +4,42 @@ RSpec.describe 'Sleep Records API', type: :request do
   let(:user) { create(:user) }
   let(:Authorization) { user.id }
 
-  path '/api/sleep_records' do
-    post('Clock in or out') do
+  path '/api/sleep_records/clock_in' do
+    post('Clock in for sleep tracking') do
       tags 'Sleep Records'
-      description 'Clock in or out for sleep tracking.'
+      description 'Record a sleep clock-in event. Only one active sleep record per user is allowed.'
       consumes 'application/json'
       produces 'application/json'
       security [ UserAuth: [] ]
-      parameter name: :params, in: :body, schema: {
-        type: :object,
-        properties: {
-          action_type: { type: :string, enum: %w[clock_in clock_out] }
-        },
-        required: [ 'action_type' ]
-      }
 
       response(201, 'Successfully clocked in') do
-        let(:params) { { action_type: 'clock_in' } }
         schema '$ref' => '#/components/schemas/SleepRecordResponse'
         run_test!
       end
 
+      response(401, 'Unauthorized') do
+        let(:Authorization) { nil }
+        schema '$ref' => '#/components/schemas/ErrorResponse'
+        run_test!
+      end
+
+      response(422, 'Already clocked in') do
+        before { create(:sleep_record, :active, user: user) }
+        schema '$ref' => '#/components/schemas/ErrorResponse'
+        run_test!
+      end
+    end
+  end
+
+  path '/api/sleep_records/clock_out' do
+    post('Clock out for sleep tracking') do
+      tags 'Sleep Records'
+      description 'Record a sleep clock-out event. The user must have an active sleep record.'
+      consumes 'application/json'
+      produces 'application/json'
+      security [ UserAuth: [] ]
+
       response(200, 'Successfully clocked out') do
-        let(:params) { { action_type: 'clock_out' } }
         before { create(:sleep_record, :active, user: user) }
         schema '$ref' => '#/components/schemas/SleepRecordResponse'
         run_test!
@@ -34,20 +47,11 @@ RSpec.describe 'Sleep Records API', type: :request do
 
       response(401, 'Unauthorized') do
         let(:Authorization) { nil }
-        let(:params) { { action_type: 'clock_in' } }
-        schema '$ref' => '#/components/schemas/ErrorResponse'
-        run_test!
-      end
-
-      response(422, 'Already clocked in') do
-        let(:params) { { action_type: 'clock_in' } }
-        before { create(:sleep_record, :active, user: user) }
         schema '$ref' => '#/components/schemas/ErrorResponse'
         run_test!
       end
 
       response(422, 'No active sleep record') do
-        let(:params) { { action_type: 'clock_out' } }
         schema '$ref' => '#/components/schemas/ErrorResponse'
         run_test!
       end

@@ -71,15 +71,15 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-  "/api/sleep_records":
+  "/api/sleep_records/clock_in":
     post:
-      summary: Clock in or out
+      summary: Clock in for sleep tracking
       tags:
       - Sleep Records
-      description: Clock in or out for sleep tracking.
+      description: Record a sleep clock-in event. Only one active sleep record per
+        user is allowed.
       security:
       - UserAuth: []
-      parameters: []
       responses:
         '201':
           description: Successfully clocked in
@@ -87,6 +87,28 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/SleepRecordResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '422':
+          description: Already clocked in
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/sleep_records/clock_out":
+    post:
+      summary: Clock out for sleep tracking
+      tags:
+      - Sleep Records
+      description: Record a sleep clock-out event. The user must have an active sleep
+        record.
+      security:
+      - UserAuth: []
+      responses:
         '200':
           description: Successfully clocked out
           content:
@@ -105,19 +127,6 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                action_type:
-                  type: string
-                  enum:
-                  - clock_in
-                  - clock_out
-              required:
-              - action_type
   "/api/sleep_records/feeds":
     get:
       summary: Get sleep record feeds
