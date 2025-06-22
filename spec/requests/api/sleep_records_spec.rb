@@ -10,7 +10,7 @@ RSpec.describe 'Sleep Records API', type: :request do
       description 'Record a sleep clock-in event. Only one active sleep record per user is allowed.'
       consumes 'application/json'
       produces 'application/json'
-      security [UserAuth: []]
+      security [ UserAuth: [] ]
 
       response(201, 'Successfully clocked in') do
         schema '$ref' => '#/components/schemas/SleepRecordResponse'
@@ -37,7 +37,7 @@ RSpec.describe 'Sleep Records API', type: :request do
       description 'Record a sleep clock-out event. The user must have an active sleep record.'
       consumes 'application/json'
       produces 'application/json'
-      security [UserAuth: []]
+      security [ UserAuth: [] ]
 
       response(200, 'Successfully clocked out') do
         before { create(:sleep_record, :active, user: user) }
