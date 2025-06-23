@@ -60,5 +60,5 @@ group :development, :test do
   gem "rswag-ui"
 end
 
-gem "solargraph", "~> 0.55.1", group: :development
+gem "solargraph", "~> 0.55.2", group: :development
 gem "active_model_serializers"
